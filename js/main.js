@@ -85,15 +85,18 @@
 
   // Mudanças vindas de outros clientes (ou do próprio save) → só atualiza a UI.
   // NÃO chama dayStore.salvar de volta (evita loop).
-  global.deviceSync.assinarEstado((dia) => {
-    if (dia && dia.data === diaAtual.data) {
-      diaAtual = dia;
+  global.deviceSync.assinarEstado((dias) => {
+    global.dayStore.sincronizar(dias);
+    const d = dias && dias[diaAtual.data] ? dias[diaAtual.data] : null;
+    if (d) {
+      diaAtual = d;
       atualizarUI();
     }
   });
 
   // Boot
   global.deviceSync.inicializar();
+  global.dayStore.sincronizar(global.deviceSync.obterDias());
   diaAtual = global.dayStore.carregar(hojeISO());
   if (diaAtual.tarefas.length === 0) {
     diaAtual.tarefas = tarefasPadraoDoDia();

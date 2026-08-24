@@ -1,11 +1,10 @@
 "use strict";
 
-// Configuração do Firebase Realtime Database (Stack Spec §3).
-// SUBSTITUA pelas credenciais reais do seu projeto Firebase antes de publicar.
-// Compatível com Firefox 68 (use SDK compatível com esse navegador).
+// Configuração do Firebase Realtime Database (projeto painel-padaria-pdv).
+// Compatível com Firefox 68 (SDK compatível carregado via <script>).
 const FIREBASE_CONFIG = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
-  projectId: "SEU_PROJETO",
+  apiKey: "AIzaSyD1cXMRbJgsBQxG3dlSCOkX7o3BH6qK2Ys",
+  authDomain: "painel-padaria-pdv.firebaseapp.com",
+  databaseURL: "https://painel-padaria-pdv-default-rtdb.firebaseio.com",
+  projectId: "painel-padaria-pdv",
 };
