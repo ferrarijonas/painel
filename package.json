@@ -1,0 +1,14 @@
+{
+  "name": "painel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Painel de gestão de tempo da produção — linha do balanço 8h-18h, agendamento automático por recursos.",
+  "scripts": {
+    "serve": "node serve.js",
+    "test": "node test-scheduler.js",
+    "build": "node build.js",
+    "deploy": "node build.js && echo deploy: publicar em GitHub Pages"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

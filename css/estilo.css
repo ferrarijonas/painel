@@ -1,0 +1,212 @@
+/* =========================================================
+   painel — Linha do Dia (identidade: Pão de Verdade)
+   Tons de cinza + preto #212121 · Acento marrom #4A2E1B
+   Títulos: Playfair Display | Corpo: Open Sans
+   Adaptado para 10-foot (TV box, controle remoto)
+   ========================================================= */
+
+:root {
+  --bg: #FCFBF9;
+  --bg-alt: #F2F0EC;
+  --text: #212121;
+  --text-soft: #6E6A64;
+  --line: #E2DED7;
+  --accent: #4A2E1B;
+  --accent-dark: #382213;
+  --accent-soft: #EFEAE3;
+  --gold: #8A7A5C;
+  --white: #FFFFFF;
+  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --sans: 'Open Sans', 'Segoe UI', Arial, sans-serif;
+  --shadow: 0 12px 34px rgba(33, 33, 33, 0.1);
+  --foco: #4A2E1B;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--sans);
+  background:
+    radial-gradient(ellipse 70% 50% at 15% -8%, rgba(74, 46, 27, 0.04), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 95% 0%, rgba(33, 33, 33, 0.03), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Barra superior ---------- */
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.8rem 1.5rem;
+  background: rgba(253, 251, 246, 0.94);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.marca img {
+  height: 52px;
+  width: auto;
+  display: block;
+}
+
+.titulo-bloco { display: flex; flex-direction: column; line-height: 1.1; }
+
+.titulo {
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.subtitulo {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  letter-spacing: 0.04em;
+}
+
+.data {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  color: var(--accent);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.pessoas {
+  font-size: 1.1rem;
+  padding: 0.35rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  background: var(--white);
+  white-space: nowrap;
+}
+
+.acoes { display: flex; gap: 0.6rem; }
+
+.acao {
+  font-family: var(--sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.55rem 1.1rem;
+  background: var(--white);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+/* ---------- Timeline ---------- */
+.timeline {
+  position: relative;
+  flex: 1 1 auto;
+  background: var(--bg);
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.legenda {
+  position: absolute;
+  top: 0.4rem;
+  right: 1rem;
+  z-index: 5;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.legenda span { display: flex; align-items: center; gap: 0.35rem; }
+
+.legenda i { width: 0.7rem; height: 0.7rem; border-radius: 2px; display: inline-block; }
+
+.eixo-horas {
+  position: relative;
+  height: 3.4rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-alt);
+}
+
+.hora {
+  position: absolute;
+  top: 0.5rem;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.hora::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 1.8rem;
+  height: calc(100vh - 8rem);
+  width: 1px;
+  background: rgba(226, 222, 215, 0.7);
+  transform: translateX(-50%);
+}
+
+.corpo-barras {
+  position: relative;
+  height: calc(100% - 3.4rem);
+}
+
+/* ---------- Barras de tarefa ---------- */
+.barra {
+  position: absolute;
+  top: 1rem;
+  height: 3rem;
+  border-radius: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(33, 33, 33, 0.12);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.barra .rotulo {
+  display: block;
+  padding: 0.6rem 0.9rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+/* Estados de foco/seleção (D-pad) */
+.focado {
+  border-color: var(--foco);
+  box-shadow: 0 0 0 4px rgba(74, 46, 27, 0.25);
+  transform: scale(1.02);
+}
+
+.selecionado {
+  box-shadow: 0 0 0 5px var(--gold);
+  transform: scale(1.03);
+}
+
+.acao.focado {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ---------- Rodapé / status ---------- */
+.rodape {
+  flex: 0 0 auto;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  color: var(--text-soft);
+  background: var(--bg-alt);
+  border-top: 1px solid var(--line);
+}

@@ -1,0 +1,9 @@
+# Dependências (não usamos bundler, mas por segurança)
+node_modules/
+
+# Arquivos de ambiente/segredos
+.env
+.env.local
+
+# Firebase config real (se mover para segredo, descomentar)
+# firebase-config.js

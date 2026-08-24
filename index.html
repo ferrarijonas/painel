@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>painel — Pão de Verdade · produção</title>
+  <meta name="description" content="Painel de gestão de tempo da produção — linha do balanço 8h-18h.">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+  <header class="barra">
+    <div class="marca">
+      <img src="marca.png" alt="Pão de Verdade — Forneria Artesanal">
+    </div>
+    <div class="titulo-bloco">
+      <h1 class="titulo">Linha do Dia</h1>
+      <div class="subtitulo">Produção · 8h às 18h</div>
+    </div>
+    <div class="data" id="dataAtual">—</div>
+    <div class="pessoas" id="contadorPessoas">1 pessoa</div>
+    <nav class="acoes">
+      <button class="acao" data-acao="adicionar">+ tarefa</button>
+      <button class="acao" data-acao="pessoas">pessoas</button>
+      <button class="acao" data-acao="dia">dia</button>
+    </nav>
+  </header>
+
+  <main class="timeline" id="timeline" aria-label="Linha do balanço do dia">
+    <div class="legenda" id="legenda" aria-hidden="true">
+      <span><i style="background:#b3541e"></i>exclusivo</span>
+      <span><i style="background:#2e6f95"></i>capacidade</span>
+      <span><i style="background:#7a8b3d"></i>passivo</span>
+      <span><i style="background:#6b4e8e"></i>pessoa</span>
+      <span><i style="background:#3d7a5a"></i>livre</span>
+    </div>
+  </main>
+
+  <footer class="rodape" aria-live="polite" id="status">
+    carregando…
+  </footer>
+
+  <script src="firebase-config.js"></script>
+  <script src="js/scheduler.js"></script>
+  <script src="js/resourceRegistry.js"></script>
+  <script src="js/personCounter.js"></script>
+  <script src="js/dayStore.js"></script>
+  <script src="js/deviceSync.js"></script>
+  <script src="js/timelineRenderer.js"></script>
+  <script src="js/remoteNav.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
