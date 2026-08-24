@@ -8,6 +8,8 @@
   let firebaseRef = null;
   let diasLocais = {};
   let listeners = [];
+  let pronto = false;
+  let callbacksProntos = [];
 
   // inicializar — configura o Firebase se houver credenciais reais.
   function inicializar() {
@@ -22,10 +24,26 @@
             diasLocais = val;
             emitir(diasLocais);
           }
+          if (!pronto) {
+            pronto = true;
+            for (const cb of callbacksProntos) cb();
+            callbacksProntos = [];
+          }
         });
+        return;
       }
     }
-    // Sem Firebase configurado → usa memória local (fallback de desenvolvimento).
+    // Sem Firebase configurado → memória local (fallback de desenvolvimento).
+    pronto = true;
+    for (const cb of callbacksProntos) cb();
+    callbacksProntos = [];
+  }
+
+  // quandoPronto — executa callback quando o primeiro snapshot chegar
+  // (ou imediatamente se sem Firebase).
+  function quandoPronto(cb) {
+    if (pronto) cb();
+    else callbacksProntos.push(cb);
   }
 
   // salvarDia — grava um dia (por data) no estado compartilhado e notifica.
@@ -55,7 +73,7 @@
     for (const l of listeners) l(dias);
   }
 
-  const api = { inicializar, salvarDia, obterDias, assinarEstado };
+  const api = { inicializar, salvarDia, obterDias, assinarEstado, quandoPronto };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.deviceSync = api;
 })(typeof window !== "undefined" ? window : this);

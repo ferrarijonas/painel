@@ -86,22 +86,27 @@
   // Mudanças vindas de outros clientes (ou do próprio save) → só atualiza a UI.
   // NÃO chama dayStore.salvar de volta (evita loop).
   global.deviceSync.assinarEstado((dias) => {
+    if (!dias) return;
     global.dayStore.sincronizar(dias);
-    const d = dias && dias[diaAtual.data] ? dias[diaAtual.data] : null;
+    if (!diaAtual) return; // boot ainda não atribuiu o dia
+    const d = dias[diaAtual.data];
     if (d) {
       diaAtual = d;
       atualizarUI();
     }
   });
 
-  // Boot
+  // Boot — aguarda o primeiro snapshot do deviceSync antes de decidir
+// criar o dia padrão (evita sobrescrever o dia real do Firebase).
   global.deviceSync.inicializar();
-  global.dayStore.sincronizar(global.deviceSync.obterDias());
-  diaAtual = global.dayStore.carregar(hojeISO());
-  if (diaAtual.tarefas.length === 0) {
-    diaAtual.tarefas = tarefasPadraoDoDia();
-    global.dayStore.salvar(diaAtual);
-  }
-  global.remoteNav.inicializar();
-  atualizarUI();
+  global.deviceSync.quandoPronto(function iniciar() {
+    global.dayStore.sincronizar(global.deviceSync.obterDias());
+    diaAtual = global.dayStore.carregar(hojeISO());
+    if (diaAtual.tarefas.length === 0) {
+      diaAtual.tarefas = tarefasPadraoDoDia();
+      global.dayStore.salvar(diaAtual);
+    }
+    global.remoteNav.inicializar();
+    atualizarUI();
+  });
 })(typeof window !== "undefined" ? window : this);
