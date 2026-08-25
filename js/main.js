@@ -177,6 +177,33 @@
     }
   });
 
+  // Verificação de versão — avisa quando um novo deploy chegou ao GitHub Pages.
+  // Dados do dia (Firebase) sincronizam sozinhos; código novo exige reload.
+  const versaoEl = document.getElementById("versaoAviso");
+  let versaoCarregada = null;
+
+  function checarVersao() {
+    if (!versaoEl) return;
+    fetch("versao.json?t=" + Date.now(), { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("http"))))
+      .then((j) => {
+        if (!j || !j.versao) return;
+        if (versaoCarregada === null) {
+          versaoCarregada = j.versao;
+          return;
+        }
+        if (j.versao !== versaoCarregada) versaoEl.hidden = false;
+      })
+      .catch(() => {});
+  }
+
+  if (versaoEl) {
+    versaoEl.addEventListener("painel:selecionar", () => location.reload(true));
+    versaoEl.addEventListener("click", () => location.reload(true));
+    setInterval(checarVersao, 60000);
+    checarVersao();
+  }
+
   // Seleção/deseleção de tarefa → atualiza (ou limpa) as garras na barra.
   document.addEventListener("painel:selecionarTarefa", () => {
     global.timelineRenderer.marcarGarras(global.remoteNav.garraAtiva());

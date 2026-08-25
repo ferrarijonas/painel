@@ -28,7 +28,7 @@
     if (configPanelVisivel()) {
       itensFocados = Array.from(document.querySelectorAll("#config .config-btn, #config .config-fechar")).filter(visivel);
     } else {
-      const controles = Array.from(document.querySelectorAll(".botao-controles, .acao")).filter(visivel);
+      const controles = Array.from(document.querySelectorAll(".botao-controles, .acao, .versao-aviso")).filter(visivel);
       const barras = Array.from(document.querySelectorAll(".barra"));
       itensFocados = controles.concat(barras);
     }

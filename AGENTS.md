@@ -23,9 +23,13 @@ publicada, não a local. Sequência obrigatória:
 
 1. Editar (código e/ou specs)
 2. Testar local: `node build.js` + `node test-scheduler.js` (+ `node test-render.js` quando mexer em render/boot)
-3. `git add` + `git commit` + `git push origin main`
+3. `git add` + `git commit` + `node versao.js` (grava o hash do deploy) + `git add versao.json` + `git commit` + `git push origin main`
 4. Aguardar o GitHub Pages atualizar (~60–75s)
 5. Testar em `https://ferrarijonas.github.io/painel/` via `node diag-edge.js https://ferrarijonas.github.io/painel/ online`
+
+O painel mostra um aviso "nova versão · OK para atualizar" quando detecta um
+deploy novo (via `versao.json`) — dados do dia (Firebase) sincronizam sozinhos;
+código novo exige um reload da página.
 
 Não parar antes do passo 5. Página oficial: `https://ferrarijonas.github.io/painel/`.
 
