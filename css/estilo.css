@@ -289,6 +289,44 @@ body {
   transform: scale(1.03);
 }
 
+/* Garras da barra selecionada (corpo/fim/começo) */
+.barra.selecionado .garra {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 64%;
+  border-radius: 4px;
+  background: var(--white);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px rgba(33, 33, 33, 0.3);
+}
+
+.barra.selecionado .garra-esq { left: -7px; }
+.barra.selecionado .garra-dir { right: -7px; }
+
+.barra.selecionado .garra.ativo {
+  background: var(--accent);
+  border-color: var(--accent);
+  width: 14px;
+}
+
+.garra-etiqueta {
+  position: absolute;
+  top: -2.1rem;
+  right: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  white-space: nowrap;
+  z-index: 4;
+}
+
 .acao.focado,
 .botao-controles.focado {
   background: var(--accent);

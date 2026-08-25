@@ -81,6 +81,10 @@ com rede lenta/modo local).
 - Tempo na **horizontal** (8h–18h); eixo Y = **postos** em ordem de fluxo.
 - Cada receita/fornada = linha diagonal (conectores SVG) cruzando os postos.
 - Barras que se sobrepõem na mesma pista **empilham em trilhas**.
+- Barra selecionada ganha **garras**: `corpo` (mover etapa), `fim` (estica/
+  encurta duração, começo fixo), `começo` (mantém o fim = "Must Finish On").
+  `↑`/`↓` alterna a garra; `←`/`→` aplica (passo 15min). Sucessores seguem
+  a etapa movida (sem folga); predecessores ficam.
 - Linha vertical "agora" varrendo o dia.
 - Cor por tipo de receita (`COR_PAO`); pistas alternam fundo.
 
@@ -95,6 +99,8 @@ node diag-edge.js <url> [online|nodb]      # diagnóstico no Edge real
 node diag-layout.js <url>                  # retângulos/colisões do layout (sem visão)
 node diag-interact.js <url>                # interação por D-pad (menu, seleção, empurrar)
 node diag-config.js <url>                  # modal de config da tarefa (não-destrutivo)
+node diag-grips.js <url>                   # garras da barra selecionada (não-destrutivo)
+node diag-persist.js <url>                 # persistência após reload (não-destrutivo)
 node diag-shot.js <url> [png]              # screenshot para inspeção
 ```
 

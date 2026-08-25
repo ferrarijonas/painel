@@ -9,6 +9,10 @@
   let itensFocados = [];
   let selecionadaEl = null;
 
+  // Garras de movimentação da barra selecionada (↑/↓ alterna).
+  const GARRAS = ["corpo", "fim", "comeco"];
+  let garraAtiva = "corpo";
+
   // visivel — só navegáveis com layout (escondidos ficam fora do foco).
   function visivel(el) {
     return el.getClientRects().length > 0;
@@ -107,15 +111,25 @@
     }
   }
 
+  // ciclarGarra — ↑/↓ troca a garra da barra selecionada.
+  function ciclarGarra() {
+    const i = GARRAS.indexOf(garraAtiva);
+    garraAtiva = GARRAS[(i + 1) % GARRAS.length];
+    document.dispatchEvent(new CustomEvent("painel:garraMudou", { detail: { garra: garraAtiva } }));
+    return garraAtiva;
+  }
+
   // mover — setas: navegam o foco; com tarefa selecionada (e config fechada),
-  // laterais empurram no tempo.
+  // laterais empurram na garra ativa e verticais trocam a garra.
   function mover(dx, dy) {
     coletarNavegaveis();
     if (itensFocados.length === 0) return;
 
     if (!configPanelVisivel() && selecionadaEl) {
       if (dx !== 0) {
-        document.dispatchEvent(new CustomEvent("painel:empurrar", { detail: { id: selecionadaEl.dataset.id, dir: dx } }));
+        document.dispatchEvent(new CustomEvent("painel:empurrar", { detail: { id: selecionadaEl.dataset.id, dir: dx, garra: garraAtiva } }));
+      } else if (dy !== 0) {
+        ciclarGarra();
       }
       return;
     }
@@ -173,6 +187,8 @@
     reaplicarSelecao,
     focarPrimeiro,
     focarBarra,
+    ciclarGarra,
+    garraAtiva: () => garraAtiva,
     temSelecao: () => !!selecionadaEl,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

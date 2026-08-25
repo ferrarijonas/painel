@@ -53,63 +53,76 @@
     return n;
   }
 
+  // estaBloqueado — a tarefa [inicio, fim) fere recurso exclusivo, capacidade
+  // ou limite de pessoas ativas?
+  function estaBloqueado(tarefa, agenda, inicio, fim, pessoas, regrasRecursos) {
+    for (const rid of tarefa.recursos || []) {
+      const regra = regrasRecursos[rid];
+      const tipo = regra.tipo;
+
+      if (tipo === OCUP.EXCLUSIVO) {
+        if (ocupadosNoIntervalo(agenda, inicio, fim, (a) => a.recursos.includes(rid)) > 0) return true;
+      } else if (tipo === OCUP.CAPACIDADE) {
+        const cap = regra.capacidade || 1;
+        const n = ocupadosNoIntervalo(agenda, inicio, fim, (a) => a.recursos.includes(rid));
+        if (n >= cap) return true;
+      }
+    }
+
+    if (tarefa.recursos && tarefa.recursos.some((rid) => regrasRecursos[rid].tipo === OCUP.PESSOA_ATIVA)) {
+      const nPessoas = ocupadosNoIntervalo(agenda, inicio, fim, (a) =>
+        a.recursos.some((rid2) => regrasRecursos[rid2].tipo === OCUP.PESSOA_ATIVA)
+      );
+      if (nPessoas >= pessoas) return true;
+    }
+    return false;
+  }
+
   // primeiroInicioLivre — acha o menor início >= aPartirDe onde a tarefa
   // respeita todas as regras de recurso e de pessoas, e as dependências.
   // `prevInicio` preserva a posição anterior da tarefa (não re-embaralha o resto).
   function primeiroInicioLivre(tarefa, agenda, pessoas, regrasRecursos, aPartirDe, prevInicio) {
     const duracao = tarefa.duracaoMin;
-    // `inicioMin` fixa o início mais cedo possível (empurrar).
-    // `anterior` mantém a posição atual quando não há motivo para mudar.
-    const anterior = prevInicio && prevInicio.has(tarefa.id) ? prevInicio.get(tarefa.id) : T0;
-    // `inicioMin` é intenção explícita do usuário (empurrar) e vence a
-    // preservação; sem inicioMin, preserva-se a posição anterior.
-    const base = tarefa.inicioMin !== undefined ? tarefa.inicioMin : anterior;
-    let candidato = Math.max(
-      aPartirDe === undefined ? T0 : aPartirDe,
-      base
-    );
 
     // Dependências: esta tarefa só inicia depois que todas as dependentes terminaram.
+    let depFim = T0;
     if (Array.isArray(tarefa.dependeDe) && tarefa.dependeDe.length) {
       for (const depId of tarefa.dependeDe) {
         const dep = agenda.find((a) => a.id === depId);
-        if (dep && dep.fim > candidato) candidato = dep.fim;
+        if (dep && dep.fim > depFim) depFim = dep.fim;
       }
     }
 
-    // Tarefa `ateFim` ocupa até o fim da janela; as demais têm duração fixa.
-    const fimDe = (c) => (tarefa.ateFim ? T1 : c + duracao);
+    // Fim fixado: `ateFim` ocupa até o fim da janela (duração não trava o
+    // encaixe); `fimFixo` tenta terminar exatamente no alvo e, se não der
+    // (predecessor/recurso), cai no encaixe normal — a cadeia acompanha.
+    if (tarefa.ateFim) {
+      let candidato = Math.max(aPartirDe === undefined ? T0 : aPartirDe, depFim);
+      while (candidato < T1) {
+        if (!estaBloqueado(tarefa, agenda, candidato, T1, pessoas, regrasRecursos)) return candidato;
+        candidato++;
+      }
+      throw err("SEM_HORARIO");
+    }
+    if (tarefa.fimFixo !== undefined) {
+      const alvo = Math.max(tarefa.fimFixo - duracao, depFim, aPartirDe === undefined ? T0 : aPartirDe);
+      if (alvo + duracao <= T1 && !estaBloqueado(tarefa, agenda, alvo, alvo + duracao, pessoas, regrasRecursos)) {
+        return alvo;
+      }
+      // Não segurou o fim → segue para o encaixe normal (cadeia acompanha).
+    }
+
+    // Sem fim fixo: `inicioMin` é intenção explícita (empurrar) e vence a
+    // preservação; sem inicioMin, preserva-se a posição anterior.
+    const anterior = prevInicio && prevInicio.has(tarefa.id) ? prevInicio.get(tarefa.id) : T0;
+    const base = tarefa.inicioMin !== undefined ? tarefa.inicioMin : anterior;
+    let candidato = Math.max(aPartirDe === undefined ? T0 : aPartirDe, base, depFim);
 
     // Candidato vai avançando enquanto alguma regra bloquear.
+    const fimDe = (c) => (tarefa.ateFim ? T1 : c + duracao);
     while (candidato < T1 && fimDe(candidato) <= T1) {
       const fim = fimDe(candidato);
-      let bloqueado = false;
-
-      for (const rid of tarefa.recursos || []) {
-        const regra = regrasRecursos[rid];
-        const tipo = regra.tipo;
-
-        if (tipo === OCUP.EXCLUSIVO) {
-          if (ocupadosNoIntervalo(agenda, candidato, fim, (a) => a.recursos.includes(rid)) > 0) {
-            bloqueado = true;
-          }
-        } else if (tipo === OCUP.CAPACIDADE) {
-          const cap = regra.capacidade || 1;
-          const n = ocupadosNoIntervalo(agenda, candidato, fim, (a) => a.recursos.includes(rid));
-          if (n >= cap) bloqueado = true;
-        }
-      }
-
-      if (!bloqueado && tarefa.recursos && tarefa.recursos.some((rid) => regrasRecursos[rid].tipo === OCUP.PESSOA_ATIVA)) {
-        // Conta pessoas-ativas simultâneas (tarefas já agendadas que exigem pessoa).
-        const nPessoas = ocupadosNoIntervalo(agenda, candidato, fim, (a) =>
-          a.recursos.some((rid2) => regrasRecursos[rid2].tipo === OCUP.PESSOA_ATIVA)
-        );
-        // Esta tarefa exige 1 pessoa; se o total de pessoas ativas alcança o limite, bloqueia.
-        if (nPessoas >= pessoas) bloqueado = true;
-      }
-
-      if (!bloqueado) return candidato;
+      if (!estaBloqueado(tarefa, agenda, candidato, fim, pessoas, regrasRecursos)) return candidato;
       candidato++;
     }
 

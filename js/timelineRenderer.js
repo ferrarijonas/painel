@@ -266,6 +266,29 @@
     atualizarAgora();
   }
 
+  // marcarGarras — decora a barra selecionada com as alças de movimentação
+  // (corpo = mover, dir = fim/duração, esq = manter o fim) e a etiqueta.
+  function marcarGarras(garra) {
+    const antigas = document.querySelectorAll(".garra, .garra-etiqueta");
+    for (const el of antigas) el.remove();
+    const barra = document.querySelector(".barra.selecionado");
+    if (!barra) return;
+    const g = garra || "corpo";
+
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "garra-etiqueta";
+    etiqueta.textContent = g === "fim" ? "fim" : g === "comeco" ? "começo" : "mover";
+    barra.appendChild(etiqueta);
+
+    const esq = document.createElement("span");
+    esq.className = "garra garra-esq" + (g === "comeco" ? " ativo" : "");
+    barra.appendChild(esq);
+
+    const dir = document.createElement("span");
+    dir.className = "garra garra-dir" + (g === "fim" ? " ativo" : "");
+    barra.appendChild(dir);
+  }
+
   // Redimensionou a tela → re-desenha com as novas medidas.
   if (typeof window !== "undefined") {
     window.addEventListener("resize", () => {
@@ -277,7 +300,7 @@
   }
   setInterval(atualizarAgora, 30000);
 
-  const api = { render, horaTexto, percentual, pistasUsadas, trilhasPorPista };
+  const api = { render, marcarGarras, horaTexto, percentual, pistasUsadas, trilhasPorPista };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.timelineRenderer = api;
 })(typeof window !== "undefined" ? window : this);

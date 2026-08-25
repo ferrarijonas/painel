@@ -170,4 +170,25 @@ function assert(cond, msg) {
   assert(porId["p2-mas"].inicio === 60, "Pão 2 preserva 09:00 (não re-embaralha)");
 }
 
+// Cenário 11: fimFixo — segurar o fim de uma etapa (Must Finish On);
+// sucessores ficam ancorados no fim; predecessor ainda é respeitado.
+{
+  const tarefas = [
+    { id: "mas", nome: "Mistura", duracaoMin: 30, recursos: ["masseira"] },
+    { id: "fer", nome: "Fermenta", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["mas"] },
+    { id: "mod", nome: "Modela", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["fer"] },
+  ];
+  const a0 = calculaEncaixe(tarefas, 1, recursos);
+  console.log("C11 base:", mostra(a0));
+
+  // Fermenta dura 150min terminando em 180 (start = max(30, dep=30) = 30).
+  const emp = tarefas.map((t) => (t.id === "fer" ? Object.assign({}, t, { fimFixo: 180, duracaoMin: 150 }) : t));
+  const a1 = calculaEncaixe(emp, 1, recursos, undefined, a0);
+  console.log("C11 fimFixo:", mostra(a1));
+  const porId = {}; a1.forEach((x) => (porId[x.id] = x));
+  assert(porId.fer.fim === 180, "fermenta segura o fim em 180");
+  assert(porId.mod.inicio >= porId.fer.fim, "modela segue a fermenta (fim fixo)");
+  assert(porId.mas.fim <= porId.fer.inicio, "mistura continua antes da fermenta");
+}
+
 console.log(process.exitCode ? "\nHOUVE FALHAS" : "\nTODOS OS TESTES PASSARAM");

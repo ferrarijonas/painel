@@ -49,6 +49,7 @@
     global.remoteNav.coletarNavegaveis();
     global.remoteNav.aplicarFoco();
     global.remoteNav.reaplicarSelecao();
+    global.timelineRenderer.marcarGarras(global.remoteNav.garraAtiva());
   }
 
   function recarregar() {
@@ -176,15 +177,43 @@
     }
   });
 
-  // Empurrar tarefa — setas empurram no tempo e o scheduler re-encaixa tudo.
+  // Seleção/deseleção de tarefa → atualiza (ou limpa) as garras na barra.
+  document.addEventListener("painel:selecionarTarefa", () => {
+    global.timelineRenderer.marcarGarras(global.remoteNav.garraAtiva());
+  });
+
+  // Mudança de garra (↑/↓) → atualiza as alças na barra selecionada.
+  document.addEventListener("painel:garraMudou", (e) => {
+    global.timelineRenderer.marcarGarras(e.detail && e.detail.garra);
+  });
+
+  // Empurrar tarefa — setas aplicam a garra ativa e o scheduler re-encaixa tudo.
   document.addEventListener("painel:empurrar", (e) => {
-    const { id, dir } = e.detail || {};
+    const { id, dir, garra } = e.detail || {};
     if (!diaAtual || !id || !dir) return;
     const tarefa = diaAtual.tarefas.find((t) => t.id === id);
-    if (!tarefa) return;
+    const item = ultimaAgenda.find((a) => a.id === id);
+    if (!tarefa || !item) return;
     const passo = 15;
-    const antigo = tarefa.inicioMin;
-    tarefa.inicioMin = Math.max(0, (tarefa.inicioMin || 0) + dir * passo);
+    const antes = { inicioMin: tarefa.inicioMin, fimFixo: tarefa.fimFixo, duracaoMin: tarefa.duracaoMin };
+
+    const g = garra || "corpo";
+    if (g === "fim") {
+      // Borda direita: começo fixo, duração muda, fim e sucessores seguem.
+      delete tarefa.fimFixo;
+      tarefa.duracaoMin = Math.max(15, tarefa.duracaoMin + dir * passo);
+    } else if (g === "comeco") {
+      // Borda esquerda: fim fixo (Must Finish On); sucessores não se movem.
+      const novoInicio = Math.max(0, item.inicio + dir * passo);
+      tarefa.fimFixo = item.fim;
+      tarefa.duracaoMin = Math.max(15, item.fim - novoInicio);
+      tarefa.inicioMin = novoInicio;
+    } else {
+      // Corpo: começo+fim juntos; duração preservada; sucessores seguem.
+      delete tarefa.fimFixo;
+      tarefa.inicioMin = Math.max(0, (tarefa.inicioMin !== undefined ? tarefa.inicioMin : item.inicio) + dir * passo);
+    }
+
     try {
       const pessoas = global.personCounter.obter();
       ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda);
@@ -192,8 +221,10 @@
       aplicar(ultimaAgenda);
       statusEl.textContent = `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${ultimaAgenda.length} tarefa(s)`;
     } catch (err) {
-      tarefa.inicioMin = antigo;
-      statusEl.textContent = "sem espaço no dia para empurrar";
+      tarefa.inicioMin = antes.inicioMin;
+      tarefa.fimFixo = antes.fimFixo;
+      tarefa.duracaoMin = antes.duracaoMin;
+      statusEl.textContent = "sem espaço no dia para essa movimentação";
     }
   });
 
