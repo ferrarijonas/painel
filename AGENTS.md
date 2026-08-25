@@ -89,6 +89,10 @@ com rede lenta/modo local).
   encurta duração, começo fixo), `começo` (mantém o fim = "Must Finish On").
   `↑`/`↓` alterna a garra; `←`/`→` aplica (passo 15min). Sucessores seguem
   a etapa movida (sem folga); predecessores ficam.
+- **Navegação espacial** (padrão TV: W3C Spatial Navigation / Android TV): a
+  seta move o foco para o elemento mais próximo na direção — `↓` = etapa de
+  baixo (próximo processo), `→` = outro pão na mesma pista, `↑` = sobe.
+  O foco começa na 1ª barra; o menu é alcançado com `↑`.
 - Linha vertical "agora" varrendo o dia.
 - Cor por tipo de receita (`COR_PAO`); pistas alternam fundo.
 
@@ -104,6 +108,7 @@ node diag-layout.js <url>                  # retângulos/colisões do layout (se
 node diag-interact.js <url>                # interação por D-pad (menu, seleção, empurrar)
 node diag-config.js <url>                  # modal de config da tarefa (não-destrutivo)
 node diag-grips.js <url>                   # garras da barra selecionada (não-destrutivo)
+node diag-spatial.js <url>                 # navegação espacial (↓ etapa de baixo, → pista)
 node diag-persist.js <url>                 # persistência após reload (não-destrutivo)
 node diag-shot.js <url> [png]              # screenshot para inspeção
 ```

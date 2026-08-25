@@ -49,9 +49,7 @@ const passo = () => new Promise((r) => setTimeout(r, 250));
     });
 
   console.log("1:", JSON.stringify(await estado()));
-  // seleciona a 1ª barra e abre config (2º OK)
-  await page.keyboard.press("ArrowDown");
-  await passo();
+  // seleciona a 1ª barra (foco já começa nela) e abre config (2º OK)
   await page.keyboard.press("Enter");
   await passo();
   await page.keyboard.press("Enter");

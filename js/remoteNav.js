@@ -1,9 +1,10 @@
 (function (global) {
   "use strict";
 
-  // remoteNav — traduz D-pad/teclado/celular em foco, seleção, empurrão e config (Eng §3).
-  // Navegação 10-foot: setas movem o foco, OK seleciona/confirma, Voltar sai.
-  // Tarefa selecionada: setas empurram no tempo; OK de novo abre as configs.
+  // remoteNav — D-pad/teclado/celular em foco, seleção, empurrão e config (Eng §3).
+  // Navegação ESPACIAL (padrão TV: W3C Spatial Navigation / Android TV):
+  // a seta move o foco para o elemento mais próximo NAQUELA direção.
+  // ↓ = etapa de baixo (próximo processo), → = outro pão na mesma pista.
 
   let focoIndex = -1;
   let itensFocados = [];
@@ -52,6 +53,42 @@
     }
   }
 
+  // moverSpatial — escolhe o alvo mais próximo na direção (por centro/geometria).
+  function moverSpatial(dx, dy) {
+    const atual = itensFocados[focoIndex];
+    if (!atual) return;
+    const ra = atual.getBoundingClientRect();
+    const cxa = ra.left + ra.width / 2;
+    const cya = ra.top + ra.height / 2;
+    let melhor = null;
+    let melhorScore = Infinity;
+    for (const alvo of itensFocados) {
+      if (alvo === atual) continue;
+      const rb = alvo.getBoundingClientRect();
+      const cxb = rb.left + rb.width / 2;
+      const cyb = rb.top + rb.height / 2;
+      let dif;
+      if (dy !== 0) {
+        dif = cyb - cya;
+        if (Math.sign(dif) !== dy) continue;
+      } else {
+        dif = cxb - cxa;
+        if (Math.sign(dif) !== dx) continue;
+      }
+      // Distância na direção + penalidade de desalinhamento perpendicular.
+      const score = Math.abs(dif) + (dy !== 0 ? Math.abs(cxb - cxa) : Math.abs(cyb - cya)) * 2;
+      if (score < melhorScore) {
+        melhorScore = score;
+        melhor = alvo;
+      }
+    }
+    if (melhor) {
+      focoIndex = itensFocados.indexOf(melhor);
+      aplicarFoco();
+      melhor.scrollIntoView({ block: "nearest" });
+    }
+  }
+
   // selecionar — OK: barra alterna seleção (2º OK abre config); botão dispara ação.
   function selecionar() {
     coletarNavegaveis();
@@ -92,6 +129,20 @@
     }
   }
 
+  // focarPrimeiraBarra — foco na 1ª barra (ou no menu se não houver barras).
+  function focarPrimeiraBarra() {
+    coletarNavegaveis();
+    const idx = itensFocados.findIndex((el) => el.classList.contains("barra"));
+    focoIndex = idx >= 0 ? idx : itensFocados.length ? 0 : -1;
+    aplicarFoco();
+    return idx >= 0;
+  }
+
+  // focoDefinido — há um elemento focado válido?
+  function focoDefinido() {
+    return focoIndex >= 0 && itensFocados[focoIndex] !== undefined;
+  }
+
   // focarPrimeiro — foco no 1º navegável (ex.: abrir config).
   function focarPrimeiro() {
     coletarNavegaveis();
@@ -119,13 +170,22 @@
     return garraAtiva;
   }
 
-  // mover — setas: navegam o foco; com tarefa selecionada (e config fechada),
-  // laterais empurram na garra ativa e verticais trocam a garra.
+  // mover — setas: navegam espacialmente; com tarefa selecionada, laterais
+  // empurram na garra ativa e verticais trocam a garra; config usa lista linear.
   function mover(dx, dy) {
     coletarNavegaveis();
     if (itensFocados.length === 0) return;
 
-    if (!configPanelVisivel() && selecionadaEl) {
+    if (configPanelVisivel()) {
+      if (focoIndex === -1) focoIndex = 0;
+      const n = itensFocados.length;
+      if (dx !== 0) focoIndex = (focoIndex + dx + n) % n;
+      else if (dy !== 0) focoIndex = Math.max(0, Math.min(n - 1, focoIndex + dy));
+      aplicarFoco();
+      return;
+    }
+
+    if (selecionadaEl) {
       if (dx !== 0) {
         document.dispatchEvent(new CustomEvent("painel:empurrar", { detail: { id: selecionadaEl.dataset.id, dir: dx, garra: garraAtiva } }));
       } else if (dy !== 0) {
@@ -135,22 +195,7 @@
     }
 
     if (focoIndex === -1) focoIndex = 0;
-    const atual = itensFocados[focoIndex];
-    const n = itensFocados.length;
-
-    if (dx !== 0) {
-      const alvo = focoIndex + dx;
-      focoIndex = (alvo + n) % n;
-    } else if (dy !== 0) {
-      const alvo = focoIndex + dy;
-      if (alvo >= 0 && alvo < n) focoIndex = alvo;
-    }
-
-    const novo = itensFocados[focoIndex];
-    if (novo && novo !== atual) {
-      novo.scrollIntoView({ block: "nearest" });
-    }
-    aplicarFoco();
+    moverSpatial(dx, dy);
   }
 
   // inicializar — liga teclado (setas, Enter, Esc) e eventos do D-pad.
@@ -171,10 +216,8 @@
       }
     });
     coletarNavegaveis();
-    if (itensFocados.length) {
-      focoIndex = 0;
-      aplicarFoco();
-    }
+    // O foco real é definido no 1º render (as barras ainda não existem aqui).
+    aplicarFoco();
   }
 
   const api = {
@@ -187,6 +230,8 @@
     reaplicarSelecao,
     focarPrimeiro,
     focarBarra,
+    focarPrimeiraBarra,
+    focoDefinido,
     ciclarGarra,
     garraAtiva: () => garraAtiva,
     temSelecao: () => !!selecionadaEl,

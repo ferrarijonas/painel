@@ -47,9 +47,7 @@ const passo = () => new Promise((r) => setTimeout(r, 350));
 
   console.log("1:", JSON.stringify(await estado()));
 
-  // Seleciona a 1ª barra → garras aparecem (corpo).
-  await page.keyboard.press("ArrowDown");
-  await passo();
+  // Seleciona a 1ª barra (foco já começa nela) → garras aparecem (corpo).
   await page.keyboard.press("Enter");
   await passo();
   console.log("2 selecionada (corpo):", JSON.stringify(await estado()));

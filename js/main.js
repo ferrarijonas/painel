@@ -47,6 +47,7 @@
   function aplicar(agenda) {
     global.timelineRenderer.render(timelineEl, agenda, recursos);
     global.remoteNav.coletarNavegaveis();
+    if (!global.remoteNav.focoDefinido()) global.remoteNav.focarPrimeiraBarra();
     global.remoteNav.aplicarFoco();
     global.remoteNav.reaplicarSelecao();
     global.timelineRenderer.marcarGarras(global.remoteNav.garraAtiva());
@@ -57,8 +58,17 @@
     const tarefas = diaAtual.tarefas;
     ultimaAgenda = global.scheduler.calculaEncaixe(tarefas, pessoas, recursos, undefined, ultimaAgenda);
     aplicar(ultimaAgenda);
+    atualizarStatus(pessoas, ultimaAgenda);
+  }
+
+  // atualizarStatus — rodapé: modo mover (se há tarefa selecionada) ou contagem.
+  function atualizarStatus(pessoas, agenda) {
+    if (global.remoteNav.temSelecao()) {
+      statusEl.textContent = "modo mover · ←/→ ajusta · ↑/↓ garra · esc volta";
+      return;
+    }
     const local = global.deviceSync.emModoLocal ? global.deviceSync.emModoLocal() : false;
-    statusEl.textContent = (local ? "sem rede · modo local · " : "") + `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${ultimaAgenda.length} tarefa(s)`;
+    statusEl.textContent = (local ? "sem rede · modo local · " : "") + `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${agenda.length} tarefa(s)`;
   }
 
   function atualizarUI() {
@@ -159,6 +169,7 @@
         ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda);
         global.dayStore.salvar(diaAtual);
         aplicar(ultimaAgenda);
+        atualizarStatus(global.personCounter.obter(), ultimaAgenda);
       } catch (err) {
         tarefa.duracaoMin = antiga;
         statusEl.textContent = "sem espaço no dia para essa duração";
@@ -204,9 +215,10 @@
     checarVersao();
   }
 
-  // Seleção/deseleção de tarefa → atualiza (ou limpa) as garras na barra.
+  // Seleção/deseleção de tarefa → atualiza garras, dica de modo e status.
   document.addEventListener("painel:selecionarTarefa", () => {
     global.timelineRenderer.marcarGarras(global.remoteNav.garraAtiva());
+    atualizarStatus(global.personCounter.obter(), ultimaAgenda);
   });
 
   // Mudança de garra (↑/↓) → atualiza as alças na barra selecionada.
@@ -246,7 +258,7 @@
       ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda);
       global.dayStore.salvar(diaAtual);
       aplicar(ultimaAgenda);
-      statusEl.textContent = `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${ultimaAgenda.length} tarefa(s)`;
+      atualizarStatus(pessoas, ultimaAgenda);
     } catch (err) {
       tarefa.inicioMin = antes.inicioMin;
       tarefa.fimFixo = antes.fimFixo;
