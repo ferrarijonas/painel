@@ -248,7 +248,7 @@
       const rotulo = document.createElement("div");
       rotulo.className = "rotulo-barra";
       rotulo.style.left = x + "px";
-      rotulo.style.top = Math.max(0, y - 22) + "px";
+      rotulo.style.top = Math.max(0, y - 26) + "px";
       rotulo.style.maxWidth = Math.max(w, 60) + "px";
       rotulo.textContent = `${item.nome} · ${horaTexto(item.inicio)}–${horaTexto(item.fim)}`;
       rotulo.title = rotulo.textContent;

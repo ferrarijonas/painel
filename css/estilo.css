@@ -247,6 +247,7 @@ body {
   z-index: 4;
   font-size: 1rem;
   font-weight: 600;
+  line-height: 1.15;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
