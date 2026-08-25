@@ -4,7 +4,7 @@
   // main — orquestra os componentes do painel (boot + ligação).
 
   // SEED_VERSION — força re-seed do dia quando a receita padrão muda.
-  const SEED_VERSION = 5;
+  const SEED_VERSION = 6;
 
   // COR — cada receita de pão tem sua cor (linha de balanço paralela).
   const COR = { pao1: "#B3541E", pao2: "#7A8B3D" };
