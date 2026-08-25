@@ -10,6 +10,7 @@
   let listeners = [];
   let pronto = false;
   let callbacksProntos = [];
+  let modoLocal = false;
 
   // inicializar — configura o Firebase se houver credenciais reais.
   function inicializar() {
@@ -24,12 +25,23 @@
             diasLocais = val;
             emitir(diasLocais);
           }
+          modoLocal = false;
           if (!pronto) {
             pronto = true;
             for (const cb of callbacksProntos) cb();
             callbacksProntos = [];
           }
         });
+        // Fallback de boot: sem snapshot em 8s (offline, bloqueado ou lento),
+        // segue em modo local para não ficar "carregando…" para sempre.
+        setTimeout(() => {
+          if (!pronto) {
+            modoLocal = true;
+            pronto = true;
+            for (const cb of callbacksProntos) cb();
+            callbacksProntos = [];
+          }
+        }, 8000);
         return;
       }
     }
@@ -73,7 +85,13 @@
     for (const l of listeners) l(dias);
   }
 
-  const api = { inicializar, salvarDia, obterDias, assinarEstado, quandoPronto };
+  // emModoLocal — true enquanto o primeiro snapshot não chega
+  // (sem rede, bloqueado ou lento) e o app segue com dados locais.
+  function emModoLocal() {
+    return modoLocal;
+  }
+
+  const api = { inicializar, salvarDia, obterDias, assinarEstado, quandoPronto, emModoLocal };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.deviceSync = api;
 })(typeof window !== "undefined" ? window : this);

@@ -67,9 +67,12 @@
       }
     }
 
+    // Tarefa `ateFim` ocupa até o fim da janela; as demais têm duração fixa.
+    const fimDe = (c) => (tarefa.ateFim ? T1 : c + duracao);
+
     // Candidato vai avançando enquanto alguma regra bloquear.
-    while (candidato + duracao <= T1) {
-      const fim = candidato + duracao;
+    while (candidato < T1 && fimDe(candidato) <= T1) {
+      const fim = fimDe(candidato);
       let bloqueado = false;
 
       for (const rid of tarefa.recursos || []) {
@@ -144,8 +147,10 @@
         id: t.id,
         nome: t.nome,
         inicio,
-        fim: inicio + t.duracaoMin,
+        fim: t.ateFim ? T1 : inicio + t.duracaoMin,
         recursos: t.recursos || [],
+        dependeDe: t.dependeDe || [],
+        cor: t.cor,
       };
       agenda.push(item);
       porId.set(t.id, item);

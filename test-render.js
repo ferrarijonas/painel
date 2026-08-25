@@ -29,7 +29,9 @@ const URL = process.argv[2] || "http://localhost:8125/";
   await page.waitForFunction(() => document.querySelectorAll(".barra").length > 0, { timeout: 20000 });
 
   const resultado = await page.evaluate(() => {
-    const barras = Array.from(document.querySelectorAll(".barra .rotulo")).map((b) => b.textContent);
+    const barras = Array.from(document.querySelectorAll(".rotulo-barra")).map((b) => b.textContent);
+    const pistas = Array.from(document.querySelectorAll(".rotulo-pista")).map((p) => p.textContent);
+    const conectores = document.querySelectorAll(".conectores line").length;
     const status = (document.getElementById("status") || {}).textContent || "";
     const datas = Object.keys(dayStore ? dayStore.listarDatas() : {});
     const diasRaw = window.deviceSync ? deviceSync.obterDias() : null;
@@ -44,6 +46,8 @@ const URL = process.argv[2] || "http://localhost:8125/";
     })();
     return {
       barras,
+      pistas,
+      conectores,
       status,
       datas,
       diasTipo: Array.isArray(diasRaw) ? "array" : typeof diasRaw,
@@ -55,6 +59,8 @@ const URL = process.argv[2] || "http://localhost:8125/";
   });
 
   console.log("BARRAS:", JSON.stringify(resultado.barras, null, 2));
+  console.log("PISTAS:", JSON.stringify(resultado.pistas));
+  console.log("CONECTORES:", resultado.conectores);
   console.log("STATUS:", resultado.status);
   console.log("DIAS:", JSON.stringify(resultado.datas));
   console.log("DIAS RAW:", resultado.diasTipo, JSON.stringify(resultado.diasChaves));
@@ -65,8 +71,8 @@ const URL = process.argv[2] || "http://localhost:8125/";
 
   await browser.close();
 
-  // Critério: se há erro de console OU nenhuma barra, falhou.
-  if (erros.length > 0 || resultado.barras.length === 0) {
+  // Critério: se há erro de console OU nenhuma barra OU flowline incompleta, falhou.
+  if (erros.length > 0 || resultado.barras.length === 0 || resultado.conectores < 4) {
     console.log("RESULTADO: FALHOU");
     process.exit(1);
   } else {

@@ -3,17 +3,19 @@
 
   // main — orquestra os componentes do painel (boot + ligação).
 
-  // tarefasPadraoDoDia — dia de exemplo para a primeira tela.
-  // Demonstra o escalonamento automático por recurso (Concept §9) + dependências.
+  // SEED_VERSION — força re-seed do dia quando a receita padrão muda.
+  const SEED_VERSION = 2;
+
+  // tarefasPadraoDoDia — uma receita de pão em cadeia:
+  // mistura 1h → caixa de fermentação 2h → modelagem 30min →
+  // temperatura ambiente 1h30 → forno até o fim do dia.
   function tarefasPadraoDoDia() {
     return [
-      { id: "p1-mas", nome: "Pão 1 · masseira", duracaoMin: 30, recursos: ["masseira"] },
-      { id: "p1-fer", nome: "Pão 1 · fermenta", duracaoMin: 90, recursos: ["fermentacao"], dependeDe: ["p1-mas"] },
-      { id: "p1-mod", nome: "Pão 1 · modela", duracaoMin: 40, recursos: ["modelagem"], dependeDe: ["p1-fer"] },
-      { id: "p1-for", nome: "Pão 1 · assa", duracaoMin: 45, recursos: ["forno"], dependeDe: ["p1-mod"] },
-      { id: "p2-mas", nome: "Pão 2 · masseira", duracaoMin: 30, recursos: ["masseira"] },
-      { id: "p2-fer", nome: "Pão 2 · fermenta", duracaoMin: 90, recursos: ["fermentacao"], dependeDe: ["p2-mas"] },
-      { id: "geleia", nome: "Geleia de morango", duracaoMin: 50, recursos: ["livre"] },
+      { id: "pao-1-mistura", nome: "Mistura", duracaoMin: 60, recursos: ["masseira"] },
+      { id: "pao-1-fermenta", nome: "Caixa de fermentação", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-1-mistura"] },
+      { id: "pao-1-modela", nome: "Modelagem", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-1-fermenta"] },
+      { id: "pao-1-ambiente", nome: "Temp. ambiente", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-1-modela"] },
+      { id: "pao-1-forno", nome: "Forno", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-1-ambiente"] },
     ];
   }
 
@@ -43,7 +45,8 @@
     const tarefas = diaAtual.tarefas;
     const agenda = global.scheduler.calculaEncaixe(tarefas, pessoas, recursos);
     aplicar(agenda);
-    statusEl.textContent = `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${agenda.length} tarefa(s)`;
+    const local = global.deviceSync.emModoLocal ? global.deviceSync.emModoLocal() : false;
+    statusEl.textContent = (local ? "sem rede · modo local · " : "") + `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${agenda.length} tarefa(s)`;
   }
 
   function atualizarUI() {
@@ -102,8 +105,9 @@
   global.deviceSync.quandoPronto(function iniciar() {
     global.dayStore.sincronizar(global.deviceSync.obterDias());
     diaAtual = global.dayStore.carregar(hojeISO());
-    if (diaAtual.tarefas.length === 0) {
+    if (diaAtual.tarefas.length === 0 || diaAtual.seedVersion !== SEED_VERSION) {
       diaAtual.tarefas = tarefasPadraoDoDia();
+      diaAtual.seedVersion = SEED_VERSION;
       global.dayStore.salvar(diaAtual);
     }
     global.remoteNav.inicializar();

@@ -7,6 +7,7 @@
     masseira: { tipo: "exclusivo" },
     forno: { tipo: "capacidade-N", capacidade: 2 },
     fermentacao: { tipo: "passivo" },
+    ambiente: { tipo: "passivo" },
     modelagem: { tipo: "pessoa-ativa" },
     livre: { tipo: "livre" },
   };

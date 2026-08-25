@@ -1,20 +1,32 @@
 (function (global) {
   "use strict";
 
-  // timelineRenderer — desenha a linha do balanço (Gantt) 8h-18h (Eng §3).
-  // Estilo 10-foot: barras grandes, legíveis a ~3m, foco claro por D-pad.
+  // timelineRenderer — desenha a linha do balanço (Eng §3).
+  // Padrão da indústria: tempo na horizontal (8h-18h), postos em pistas
+  // no eixo Y em ordem de fluxo, e a receita como linha de fluxo diagonal
+  // cruzando os postos (flowline). Estilo 10-foot (TV, D-pad).
 
   const T0 = 0;
   const T1 = 600; // 8h-18h em minutos
 
-  // corPorRecurso — cor funcional por tipo de recurso (design: acento por função).
-  const COR = {
-    exclusivo: "#b3541e",
-    "capacidade-N": "#2e6f95",
-    passivo: "#7a8b3d",
-    "pessoa-ativa": "#6b4e8e",
-    livre: "#3d7a5a",
-  };
+  const COR_PAO = "#B3541E";
+  const COR_EXTRA = "#8A7A5C";
+  const COR_CONECTOR = "rgba(138, 122, 92, 0.7)";
+
+  // PISTAS — postos em ordem de fluxo da produção (Concept §9, a refinar).
+  const PISTAS = [
+    { id: "masseira", rotulo: "Masseira" },
+    { id: "fermentacao", rotulo: "Caixa de fermentação" },
+    { id: "modelagem", rotulo: "Modelagem" },
+    { id: "ambiente", rotulo: "Temp. ambiente" },
+    { id: "forno", rotulo: "Forno" },
+  ];
+
+  const ROTULO_EXTRA = { livre: "Livre" };
+
+  let ultimo = null;
+  let agoraEl = null;
+  let timerResize = null;
 
   function horaTexto(min) {
     const h = Math.floor(min / 60) + 8;
@@ -26,54 +38,189 @@
     return ((min - T0) / (T1 - T0)) * 100;
   }
 
-  // renderHoras — constrói o grid de horas no eixo.
-  function renderHoras(el) {
-    const grid = document.createElement("div");
-    grid.className = "eixo-horas";
+  // pistaDe — pista de um item agendado, pelo primeiro recurso.
+  function pistaDe(item) {
+    const rid = item.recursos && item.recursos.length ? item.recursos[0] : "livre";
+    const p = PISTAS.find((x) => x.id === rid);
+    return p || { id: rid, rotulo: ROTULO_EXTRA[rid] || rid };
+  }
+
+  // pistasUsadas — pistas presentes na agenda, na ordem de fluxo.
+  function pistasUsadas(agenda) {
+    const ids = [];
+    for (const item of agenda) {
+      const rid = item.recursos && item.recursos.length ? item.recursos[0] : "livre";
+      if (ids.indexOf(rid) === -1) ids.push(rid);
+    }
+    const pistas = PISTAS.filter((p) => ids.indexOf(p.id) !== -1);
+    for (const rid of ids) {
+      if (!PISTAS.some((p) => p.id === rid)) {
+        pistas.push({ id: rid, rotulo: ROTULO_EXTRA[rid] || rid });
+      }
+    }
+    return pistas;
+  }
+
+  // atualizarAgora — posiciona a linha do "agora" (escondida fora de 8h-18h).
+  function atualizarAgora() {
+    if (!agoraEl) return;
+    const d = new Date();
+    const min = (d.getHours() - 8) * 60 + d.getMinutes();
+    if (min < T0 || min > T1) {
+      agoraEl.style.display = "none";
+    } else {
+      agoraEl.style.display = "";
+      agoraEl.style.left = percentual(min) + "%";
+    }
+  }
+
+  // render — desenha o dia completo: pistas, barras e conectores de fluxo.
+  function render(el, agenda, regrasRecursos) {
+    ultimo = { el, agenda, regrasRecursos };
+    el.innerHTML = "";
+
+    const pistas = pistasUsadas(agenda);
+
+    // Topo: canto dos postos + eixo de horas.
+    const topo = document.createElement("div");
+    topo.className = "topo";
+    const canto = document.createElement("div");
+    canto.className = "canto";
+    canto.textContent = "Posto";
+    const eixo = document.createElement("div");
+    eixo.className = "eixo-horas";
     for (let m = T0; m <= T1; m += 60) {
       const tick = document.createElement("div");
       tick.className = "hora";
       tick.style.left = percentual(m) + "%";
       tick.textContent = horaTexto(m);
-      grid.appendChild(tick);
+      eixo.appendChild(tick);
     }
-    el.appendChild(grid);
-  }
+    topo.appendChild(canto);
+    topo.appendChild(eixo);
 
-  // barraDeTarefa — cria a barra de uma tarefa agendada.
-  function barraDeTarefa(item, regrasRecursos) {
-    const barra = document.createElement("div");
-    barra.className = "barra";
-    barra.dataset.id = item.id;
+    // Miolo: coluna de pistas + cenário das barras.
+    const miolo = document.createElement("div");
+    miolo.className = "miolo";
+    const coluna = document.createElement("div");
+    coluna.className = "pistas";
+    const cenario = document.createElement("div");
+    cenario.className = "cenario";
+    miolo.appendChild(coluna);
+    miolo.appendChild(cenario);
 
-    const principal = item.recursos && item.recursos.length ? item.recursos[0] : "livre";
-    const regra = regrasRecursos[principal];
-    const tipo = regra ? regra.tipo : "livre";
-    barra.style.background = COR[tipo] || COR.livre;
-    barra.style.left = percentual(item.inicio) + "%";
-    barra.style.width = percentual(item.fim - item.inicio) + "%";
+    el.appendChild(topo);
+    el.appendChild(miolo);
 
-    const rotulo = document.createElement("span");
-    rotulo.className = "rotulo";
-    rotulo.textContent = `${item.nome} · ${horaTexto(item.inicio)}`;
-    barra.appendChild(rotulo);
+    const H = cenario.clientHeight || 400;
+    const W = cenario.clientWidth || 800;
+    const laneH = H / Math.max(pistas.length, 1);
+    const barH = Math.min(120, laneH * 0.52);
 
-    return barra;
-  }
+    const idxPista = new Map();
+    pistas.forEach((p, i) => idxPista.set(p.id, i));
 
-  // render — desenha o dia completo na timeline.
-  function render(el, agenda, regrasRecursos) {
-    el.innerHTML = "";
-    renderHoras(el);
-    const corpo = document.createElement("div");
-    corpo.className = "corpo-barras";
+    // Faixas de fundo + rótulos das pistas.
+    pistas.forEach((pista, i) => {
+      const banda = document.createElement("div");
+      banda.className = "banda" + (i % 2 ? " banda-alt" : "");
+      banda.style.top = i * laneH + "px";
+      banda.style.height = laneH + "px";
+      cenario.appendChild(banda);
+
+      const rotulo = document.createElement("div");
+      rotulo.className = "rotulo-pista";
+      rotulo.style.height = laneH + "px";
+      rotulo.textContent = pista.rotulo;
+      coluna.appendChild(rotulo);
+    });
+
+    // Grade de horas.
+    for (let m = T0; m <= T1; m += 60) {
+      const linha = document.createElement("div");
+      linha.className = "gridlinha";
+      linha.style.left = percentual(m) + "%";
+      cenario.appendChild(linha);
+    }
+
+    // Conectores de fluxo: dependência → diagonal entre postos.
+    const porId = new Map();
+    for (const item of agenda) porId.set(item.id, item);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "conectores");
+    svg.setAttribute("width", W);
+    svg.setAttribute("height", H);
+    const centro = (item) => {
+      const i = idxPista.get(pistaDe(item).id);
+      return (i === undefined ? 0 : i) * laneH + laneH / 2;
+    };
     for (const item of agenda) {
-      corpo.appendChild(barraDeTarefa(item, regrasRecursos));
+      for (const depId of item.dependeDe || []) {
+        const dep = porId.get(depId);
+        if (!dep) continue;
+        const linha = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        linha.setAttribute("x1", (percentual(dep.fim) / 100) * W);
+        linha.setAttribute("y1", centro(dep));
+        linha.setAttribute("x2", (percentual(item.inicio) / 100) * W);
+        linha.setAttribute("y2", centro(item));
+        linha.setAttribute("stroke", COR_CONECTOR);
+        linha.setAttribute("stroke-width", "3");
+        linha.setAttribute("stroke-linecap", "round");
+        svg.appendChild(linha);
+      }
     }
-    el.appendChild(corpo);
+    cenario.appendChild(svg);
+
+    // Barras das tarefas, uma por pista, com rótulo acima.
+    for (const item of agenda) {
+      const pista = pistaDe(item);
+      const i = idxPista.get(pista.id);
+      if (i === undefined) continue;
+      const x = (percentual(item.inicio) / 100) * W;
+      const w = (percentual(item.fim - item.inicio) / 100) * W;
+      const y = i * laneH + (laneH - barH) / 2;
+
+      const barra = document.createElement("div");
+      barra.className = "barra";
+      barra.dataset.id = item.id;
+      barra.style.left = x + "px";
+      barra.style.top = y + "px";
+      barra.style.width = Math.max(w, 8) + "px";
+      barra.style.height = barH + "px";
+      barra.style.background = item.cor || (PISTAS.some((p) => p.id === pista.id) ? COR_PAO : COR_EXTRA);
+      cenario.appendChild(barra);
+
+      const rotulo = document.createElement("div");
+      rotulo.className = "rotulo-barra";
+      rotulo.style.left = x + "px";
+      rotulo.style.top = Math.max(0, y - 28) + "px";
+      rotulo.textContent = `${item.nome} · ${horaTexto(item.inicio)}–${horaTexto(item.fim)}`;
+      cenario.appendChild(rotulo);
+    }
+
+    // Linha do "agora".
+    agoraEl = document.createElement("div");
+    agoraEl.className = "agora";
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "etiqueta";
+    etiqueta.textContent = "agora";
+    agoraEl.appendChild(etiqueta);
+    cenario.appendChild(agoraEl);
+    atualizarAgora();
   }
 
-  const api = { render, COR, horaTexto, percentual };
+  // Redimensionou a tela → re-desenha com as novas medidas.
+  if (typeof window !== "undefined") {
+    window.addEventListener("resize", () => {
+      clearTimeout(timerResize);
+      timerResize = setTimeout(() => {
+        if (ultimo) render(ultimo.el, ultimo.agenda, ultimo.regrasRecursos);
+      }, 150);
+    });
+  }
+  setInterval(atualizarAgora, 30000);
+
+  const api = { render, horaTexto, percentual, pistasUsadas };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.timelineRenderer = api;
 })(typeof window !== "undefined" ? window : this);
