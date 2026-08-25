@@ -62,7 +62,9 @@
   function salvarDia(dia) {
     diasLocais[dia.data] = dia;
     if (firebaseRef) {
-      firebaseRef.child(dia.data).set(dia).catch(() => {});
+      firebaseRef.child(dia.data).set(dia).catch((err) => {
+        console.error("painel: falha ao gravar dia", dia.data, err && err.message);
+      });
     }
     emitir(diasLocais);
     return dia;

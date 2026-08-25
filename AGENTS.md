@@ -69,9 +69,12 @@ Flags de tarefa: `dependeDe[]` (cadeia), `ateFim: true` (ocupa até 18h),
 
 ### Seed do dia
 
-`js/main.js` tem `SEED_VERSION`; se o dia carregado não bate com a versão,
-o dia padrão (receitas de exemplo) é re-escrito. **Bump a `SEED_VERSION` ao
-mudar as receitas padrão.**
+`js/main.js` tem `SEED_VERSION` (marca a versão do seed). O seed **só
+preenche dia vazio** — o dia do usuário persiste para sempre; não há
+re-seed por versão (bump de seed **não** reseta mais o dia). Para forçar
+reset do demo, esvazie `tarefas` da data no Firebase. O seed só é gravado
+na nuvem após o 1º snapshot real (evita sobrescrever um dia existente
+com rede lenta/modo local).
 
 ## Modelo visual (padrão ouro da indústria)
 

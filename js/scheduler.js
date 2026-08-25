@@ -61,10 +61,12 @@
     // `inicioMin` fixa o início mais cedo possível (empurrar).
     // `anterior` mantém a posição atual quando não há motivo para mudar.
     const anterior = prevInicio && prevInicio.has(tarefa.id) ? prevInicio.get(tarefa.id) : T0;
+    // `inicioMin` é intenção explícita do usuário (empurrar) e vence a
+    // preservação; sem inicioMin, preserva-se a posição anterior.
+    const base = tarefa.inicioMin !== undefined ? tarefa.inicioMin : anterior;
     let candidato = Math.max(
       aPartirDe === undefined ? T0 : aPartirDe,
-      tarefa.inicioMin === undefined ? T0 : tarefa.inicioMin,
-      anterior
+      base
     );
 
     // Dependências: esta tarefa só inicia depois que todas as dependentes terminaram.

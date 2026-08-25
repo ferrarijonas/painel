@@ -207,6 +207,9 @@
     if (d) {
       diaAtual = d;
       atualizarUI();
+    } else if (diaAtual.tarefas.length > 0 && !global.deviceSync.emModoLocal()) {
+      // Snapshot real confirmou dia vazio e temos um seed/dia local → grava.
+      global.dayStore.salvar(diaAtual);
     }
   });
 
@@ -216,11 +219,17 @@
   global.deviceSync.quandoPronto(function iniciar() {
     global.dayStore.sincronizar(global.deviceSync.obterDias());
     diaAtual = global.dayStore.carregar(hojeISO());
-    if (diaAtual.tarefas.length === 0 || diaAtual.seedVersion !== SEED_VERSION) {
+    // Seed só preenche dia vazio; o dia do usuário persiste sempre
+    // (nada de re-seed por versão — o que apagaria onde paramos).
+    if (diaAtual.tarefas.length === 0) {
       diaAtual.tarefas = tarefasPadraoDoDia();
       diaAtual.seedVersion = SEED_VERSION;
-      global.dayStore.salvar(diaAtual);
       ultimaAgenda = [];
+      // Só grava o seed na nuvem após o 1º snapshot real, para não
+      // sobrescrever um dia existente com rede lenta (modo local).
+      if (!global.deviceSync.emModoLocal()) {
+        global.dayStore.salvar(diaAtual);
+      }
     }
     global.remoteNav.inicializar();
     atualizarUI();
