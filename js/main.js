@@ -4,18 +4,24 @@
   // main — orquestra os componentes do painel (boot + ligação).
 
   // SEED_VERSION — força re-seed do dia quando a receita padrão muda.
-  const SEED_VERSION = 2;
+  const SEED_VERSION = 3;
 
-  // tarefasPadraoDoDia — uma receita de pão em cadeia:
+  // tarefasPadraoDoDia — dois pães da mesma receita em cadeia:
   // mistura 1h → caixa de fermentação 2h → modelagem 30min →
   // temperatura ambiente 1h30 → forno até o fim do dia.
+  // O Pão 2 começa assim que o Pão 1 sai da masseira (recurso exclusivo).
   function tarefasPadraoDoDia() {
     return [
-      { id: "pao-1-mistura", nome: "Mistura", duracaoMin: 60, recursos: ["masseira"] },
-      { id: "pao-1-fermenta", nome: "Caixa de fermentação", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-1-mistura"] },
-      { id: "pao-1-modela", nome: "Modelagem", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-1-fermenta"] },
-      { id: "pao-1-ambiente", nome: "Temp. ambiente", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-1-modela"] },
-      { id: "pao-1-forno", nome: "Forno", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-1-ambiente"] },
+      { id: "pao-1-mistura", nome: "Pão 1 · Mistura", duracaoMin: 60, recursos: ["masseira"] },
+      { id: "pao-1-fermenta", nome: "Pão 1 · Fermenta", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-1-mistura"] },
+      { id: "pao-1-modela", nome: "Pão 1 · Modela", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-1-fermenta"] },
+      { id: "pao-1-ambiente", nome: "Pão 1 · Ambiente", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-1-modela"] },
+      { id: "pao-1-forno", nome: "Pão 1 · Forno", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-1-ambiente"] },
+      { id: "pao-2-mistura", nome: "Pão 2 · Mistura", duracaoMin: 60, recursos: ["masseira"] },
+      { id: "pao-2-fermenta", nome: "Pão 2 · Fermenta", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-2-mistura"] },
+      { id: "pao-2-modela", nome: "Pão 2 · Modela", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-2-fermenta"] },
+      { id: "pao-2-ambiente", nome: "Pão 2 · Ambiente", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-2-modela"] },
+      { id: "pao-2-forno", nome: "Pão 2 · Forno", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-2-ambiente"] },
     ];
   }
 

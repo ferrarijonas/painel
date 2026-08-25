@@ -3,8 +3,9 @@
 
   // timelineRenderer — desenha a linha do balanço (Eng §3).
   // Padrão da indústria: tempo na horizontal (8h-18h), postos em pistas
-  // no eixo Y em ordem de fluxo, e a receita como linha de fluxo diagonal
-  // cruzando os postos (flowline). Estilo 10-foot (TV, D-pad).
+  // no eixo Y em ordem de fluxo, e cada receita como linha de fluxo diagonal
+  // cruzando os postos (flowline). Tarefas que se sobrepõem na mesma pista
+  // empilham em trilhas (duas fornadas do mesmo pão). Estilo 10-foot (TV).
 
   const T0 = 0;
   const T1 = 600; // 8h-18h em minutos
@@ -23,6 +24,11 @@
   ];
 
   const ROTULO_EXTRA = { livre: "Livre" };
+
+  // Espaços dentro de cada pista (px): respiro do topo, da base e entre trilhas.
+  const TOPO_PAD = 22;
+  const BASE_PAD = 6;
+  const TRILHA_GAP = 30;
 
   let ultimo = null;
   let agoraEl = null;
@@ -61,6 +67,32 @@
     return pistas;
   }
 
+  // trilhasPorPista — atribui a cada item uma trilha (empilhamento) dentro
+  // da pista, empilhando apenas quando há sobreposição de tempo.
+  function trilhasPorPista(agenda) {
+    const porPista = new Map();
+    for (const item of agenda) {
+      const pid = pistaDe(item).id;
+      if (!porPista.has(pid)) porPista.set(pid, []);
+      porPista.get(pid).push(item);
+    }
+    const trilhaDe = new Map();
+    let maxTrilhas = 1;
+    for (const itens of porPista.values()) {
+      itens.sort((a, b) => a.inicio - b.inicio);
+      const trilhas = [];
+      for (const item of itens) {
+        let t = 0;
+        while (trilhas[t] && trilhas[t].fim > item.inicio) t++;
+        if (!trilhas[t]) trilhas[t] = { fim: item.fim };
+        else if (item.fim > trilhas[t].fim) trilhas[t].fim = item.fim;
+        trilhaDe.set(item.id, t);
+      }
+      if (trilhas.length > maxTrilhas) maxTrilhas = trilhas.length;
+    }
+    return { trilhaDe, maxTrilhas };
+  }
+
   // atualizarAgora — posiciona a linha do "agora" (escondida fora de 8h-18h).
   function atualizarAgora() {
     if (!agoraEl) return;
@@ -74,12 +106,13 @@
     }
   }
 
-  // render — desenha o dia completo: pistas, barras e conectores de fluxo.
+  // render — desenha o dia completo: pistas, trilhas, barras e conectores.
   function render(el, agenda, regrasRecursos) {
     ultimo = { el, agenda, regrasRecursos };
     el.innerHTML = "";
 
     const pistas = pistasUsadas(agenda);
+    const { trilhaDe, maxTrilhas } = trilhasPorPista(agenda);
 
     // Topo: canto dos postos + eixo de horas.
     const topo = document.createElement("div");
@@ -115,7 +148,10 @@
     const H = cenario.clientHeight || 400;
     const W = cenario.clientWidth || 800;
     const laneH = H / Math.max(pistas.length, 1);
-    const barH = Math.min(120, laneH * 0.52);
+    const barH = Math.max(
+      26,
+      Math.min(120, (laneH - TOPO_PAD - BASE_PAD - (maxTrilhas - 1) * TRILHA_GAP) / maxTrilhas)
+    );
 
     const idxPista = new Map();
     pistas.forEach((p, i) => idxPista.set(p.id, i));
@@ -152,7 +188,8 @@
     svg.setAttribute("height", H);
     const centro = (item) => {
       const i = idxPista.get(pistaDe(item).id);
-      return (i === undefined ? 0 : i) * laneH + laneH / 2;
+      const t = trilhaDe.get(item.id) || 0;
+      return (i === undefined ? 0 : i) * laneH + TOPO_PAD + t * (barH + TRILHA_GAP) + barH / 2;
     };
     for (const item of agenda) {
       for (const depId of item.dependeDe || []) {
@@ -171,14 +208,15 @@
     }
     cenario.appendChild(svg);
 
-    // Barras das tarefas, uma por pista, com rótulo acima.
+    // Barras das tarefas (uma por trilha), com rótulo acima.
     for (const item of agenda) {
       const pista = pistaDe(item);
       const i = idxPista.get(pista.id);
       if (i === undefined) continue;
+      const t = trilhaDe.get(item.id) || 0;
       const x = (percentual(item.inicio) / 100) * W;
       const w = (percentual(item.fim - item.inicio) / 100) * W;
-      const y = i * laneH + (laneH - barH) / 2;
+      const y = i * laneH + TOPO_PAD + t * (barH + TRILHA_GAP);
 
       const barra = document.createElement("div");
       barra.className = "barra";
@@ -193,7 +231,7 @@
       const rotulo = document.createElement("div");
       rotulo.className = "rotulo-barra";
       rotulo.style.left = x + "px";
-      rotulo.style.top = Math.max(0, y - 28) + "px";
+      rotulo.style.top = Math.max(0, y - 22) + "px";
       rotulo.textContent = `${item.nome} · ${horaTexto(item.inicio)}–${horaTexto(item.fim)}`;
       cenario.appendChild(rotulo);
     }
@@ -220,7 +258,7 @@
   }
   setInterval(atualizarAgora, 30000);
 
-  const api = { render, horaTexto, percentual, pistasUsadas };
+  const api = { render, horaTexto, percentual, pistasUsadas, trilhasPorPista };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else global.timelineRenderer = api;
 })(typeof window !== "undefined" ? window : this);
