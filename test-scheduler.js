@@ -147,4 +147,27 @@ function assert(cond, msg) {
   assert(erro === "DEPENDENCIA_INVALIDA", "dependência inexistente lança DEPENDENCIA_INVALIDA");
 }
 
+// Cenário 10: preservar posições — mover um processo do Pão 1 não
+// re-embaralha o Pão 2 nem os processos acima dele.
+{
+  const tarefas = [
+    { id: "p1-mas", nome: "Pão 1 mistura", duracaoMin: 60, recursos: ["masseira"] },
+    { id: "p1-fer", nome: "Pão 1 fermenta", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["p1-mas"] },
+    { id: "p1-mod", nome: "Pão 1 modela", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["p1-fer"] },
+    { id: "p2-mas", nome: "Pão 2 mistura", duracaoMin: 60, recursos: ["masseira"] },
+  ];
+  const a0 = calculaEncaixe(tarefas, 1, recursos);
+  console.log("C10 base:", mostra(a0));
+
+  // Fermenta do Pão 1 atrasa 60min → só ela e as de baixo (modela) mudam.
+  const empurradas = tarefas.map((t) => (t.id === "p1-fer" ? Object.assign({}, t, { inicioMin: 120 }) : t));
+  const a1 = calculaEncaixe(empurradas, 1, recursos, undefined, a0);
+  console.log("C10 empurrado:", mostra(a1));
+  const porId = {}; a1.forEach((x) => (porId[x.id] = x));
+  assert(porId["p1-mas"].inicio === 0, "mistura do Pão 1 preserva 08:00");
+  assert(porId["p1-fer"].inicio === 120, "fermenta do Pão 1 empurrada para 10:00");
+  assert(porId["p1-mod"].inicio >= porId["p1-fer"].fim, "modela do Pão 1 segue a fermenta (cadeia)");
+  assert(porId["p2-mas"].inicio === 60, "Pão 2 preserva 09:00 (não re-embaralha)");
+}
+
 console.log(process.exitCode ? "\nHOUVE FALHAS" : "\nTODOS OS TESTES PASSARAM");

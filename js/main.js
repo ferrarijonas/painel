@@ -4,7 +4,10 @@
   // main — orquestra os componentes do painel (boot + ligação).
 
   // SEED_VERSION — força re-seed do dia quando a receita padrão muda.
-  const SEED_VERSION = 4;
+  const SEED_VERSION = 5;
+
+  // COR — cada receita de pão tem sua cor (linha de balanço paralela).
+  const COR = { pao1: "#B3541E", pao2: "#7A8B3D" };
 
   // tarefasPadraoDoDia — dois pães da mesma receita em cadeia:
   // mistura 1h → caixa de fermentação 2h → modelagem 30min →
@@ -12,16 +15,16 @@
   // O Pão 2 começa assim que o Pão 1 sai da masseira (recurso exclusivo).
   function tarefasPadraoDoDia() {
     return [
-      { id: "pao-1-mistura", nome: "Pão 1", duracaoMin: 60, recursos: ["masseira"] },
-      { id: "pao-1-fermenta", nome: "Pão 1", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-1-mistura"] },
-      { id: "pao-1-modela", nome: "Pão 1", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-1-fermenta"] },
-      { id: "pao-1-ambiente", nome: "Pão 1", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-1-modela"] },
-      { id: "pao-1-forno", nome: "Pão 1", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-1-ambiente"] },
-      { id: "pao-2-mistura", nome: "Pão 2", duracaoMin: 60, recursos: ["masseira"] },
-      { id: "pao-2-fermenta", nome: "Pão 2", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-2-mistura"] },
-      { id: "pao-2-modela", nome: "Pão 2", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-2-fermenta"] },
-      { id: "pao-2-ambiente", nome: "Pão 2", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-2-modela"] },
-      { id: "pao-2-forno", nome: "Pão 2", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-2-ambiente"] },
+      { id: "pao-1-mistura", nome: "Pão 1", cor: COR.pao1, duracaoMin: 60, recursos: ["masseira"] },
+      { id: "pao-1-fermenta", nome: "Pão 1", cor: COR.pao1, duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-1-mistura"] },
+      { id: "pao-1-modela", nome: "Pão 1", cor: COR.pao1, duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-1-fermenta"] },
+      { id: "pao-1-ambiente", nome: "Pão 1", cor: COR.pao1, duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-1-modela"] },
+      { id: "pao-1-forno", nome: "Pão 1", cor: COR.pao1, duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-1-ambiente"] },
+      { id: "pao-2-mistura", nome: "Pão 2", cor: COR.pao2, duracaoMin: 60, recursos: ["masseira"] },
+      { id: "pao-2-fermenta", nome: "Pão 2", cor: COR.pao2, duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-2-mistura"] },
+      { id: "pao-2-modela", nome: "Pão 2", cor: COR.pao2, duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-2-fermenta"] },
+      { id: "pao-2-ambiente", nome: "Pão 2", cor: COR.pao2, duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-2-modela"] },
+      { id: "pao-2-forno", nome: "Pão 2", cor: COR.pao2, duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-2-ambiente"] },
     ];
   }
 
@@ -32,6 +35,7 @@
 
   const recursos = Object.assign({}, global.resourceRegistry.RECURSOS_PADRAO);
   let diaAtual = null;
+  let ultimaAgenda = [];
 
   function hojeISO() {
     const d = new Date();
@@ -50,10 +54,10 @@
   function recarregar() {
     const pessoas = global.personCounter.obter();
     const tarefas = diaAtual.tarefas;
-    const agenda = global.scheduler.calculaEncaixe(tarefas, pessoas, recursos);
-    aplicar(agenda);
+    ultimaAgenda = global.scheduler.calculaEncaixe(tarefas, pessoas, recursos, undefined, ultimaAgenda);
+    aplicar(ultimaAgenda);
     const local = global.deviceSync.emModoLocal ? global.deviceSync.emModoLocal() : false;
-    statusEl.textContent = (local ? "sem rede · modo local · " : "") + `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${agenda.length} tarefa(s)`;
+    statusEl.textContent = (local ? "sem rede · modo local · " : "") + `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${ultimaAgenda.length} tarefa(s)`;
   }
 
   function atualizarUI() {
@@ -114,10 +118,10 @@
     tarefa.inicioMin = Math.max(0, (tarefa.inicioMin || 0) + dir * passo);
     try {
       const pessoas = global.personCounter.obter();
-      const agenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos);
+      ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda);
       global.dayStore.salvar(diaAtual);
-      aplicar(agenda);
-      statusEl.textContent = `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${agenda.length} tarefa(s)`;
+      aplicar(ultimaAgenda);
+      statusEl.textContent = `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${ultimaAgenda.length} tarefa(s)`;
     } catch (err) {
       tarefa.inicioMin = antigo;
       statusEl.textContent = "sem espaço no dia para empurrar";
@@ -147,6 +151,7 @@
       diaAtual.tarefas = tarefasPadraoDoDia();
       diaAtual.seedVersion = SEED_VERSION;
       global.dayStore.salvar(diaAtual);
+      ultimaAgenda = [];
     }
     global.remoteNav.inicializar();
     atualizarUI();

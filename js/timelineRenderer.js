@@ -129,6 +129,14 @@
       tick.textContent = horaTexto(m);
       eixo.appendChild(tick);
     }
+    // Quebras de 15min no eixo (marcas menores).
+    for (let m = T0; m <= T1; m += 15) {
+      if (m % 60 === 0) continue;
+      const tick = document.createElement("div");
+      tick.className = "tick-menor";
+      tick.style.left = percentual(m) + "%";
+      eixo.appendChild(tick);
+    }
     topo.appendChild(canto);
     topo.appendChild(eixo);
 
@@ -171,10 +179,18 @@
       coluna.appendChild(rotulo);
     });
 
-    // Grade de horas.
+    // Grade de horas (linhas maiores a cada 60min).
     for (let m = T0; m <= T1; m += 60) {
       const linha = document.createElement("div");
       linha.className = "gridlinha";
+      linha.style.left = percentual(m) + "%";
+      cenario.appendChild(linha);
+    }
+    // Quebras de 15min (linhas menores).
+    for (let m = T0; m <= T1; m += 15) {
+      if (m % 60 === 0) continue;
+      const linha = document.createElement("div");
+      linha.className = "gridlinha-menor";
       linha.style.left = percentual(m) + "%";
       cenario.appendChild(linha);
     }
@@ -200,7 +216,8 @@
         linha.setAttribute("y1", centro(dep));
         linha.setAttribute("x2", (percentual(item.inicio) / 100) * W);
         linha.setAttribute("y2", centro(item));
-        linha.setAttribute("stroke", COR_CONECTOR);
+        linha.setAttribute("stroke", item.cor || COR_CONECTOR);
+        linha.setAttribute("stroke-opacity", item.cor ? "0.85" : "1");
         linha.setAttribute("stroke-width", "3");
         linha.setAttribute("stroke-linecap", "round");
         svg.appendChild(linha);

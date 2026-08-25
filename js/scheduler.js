@@ -55,12 +55,16 @@
 
   // primeiroInicioLivre — acha o menor início >= aPartirDe onde a tarefa
   // respeita todas as regras de recurso e de pessoas, e as dependências.
-  function primeiroInicioLivre(tarefa, agenda, pessoas, regrasRecursos, aPartirDe) {
+  // `prevInicio` preserva a posição anterior da tarefa (não re-embaralha o resto).
+  function primeiroInicioLivre(tarefa, agenda, pessoas, regrasRecursos, aPartirDe, prevInicio) {
     const duracao = tarefa.duracaoMin;
-    // `inicioMin` fixa o início mais cedo possível (usado pelo "empurrar").
+    // `inicioMin` fixa o início mais cedo possível (empurrar).
+    // `anterior` mantém a posição atual quando não há motivo para mudar.
+    const anterior = prevInicio && prevInicio.has(tarefa.id) ? prevInicio.get(tarefa.id) : T0;
     let candidato = Math.max(
       aPartirDe === undefined ? T0 : aPartirDe,
-      tarefa.inicioMin === undefined ? T0 : tarefa.inicioMin
+      tarefa.inicioMin === undefined ? T0 : tarefa.inicioMin,
+      anterior
     );
 
     // Dependências: esta tarefa só inicia depois que todas as dependentes terminaram.
@@ -135,18 +139,25 @@
   }
 
   // calculaEncaixe — orquestrador principal (regra de entrada pública).
-  function calculaEncaixe(tarefas, pessoas, regrasRecursos, aPartirDe) {
+  // `agendaAnterior` (opcional) preserva as posições atuais das tarefas não
+  // afetadas: empurrar um pão não re-embaralha o outro.
+  function calculaEncaixe(tarefas, pessoas, regrasRecursos, aPartirDe, agendaAnterior) {
     validaEntrada(tarefas, pessoas, regrasRecursos);
     if (tarefas.length === 0) return [];
 
     // Ordem de adição com dependências respeitadas (regra 10 + dependências).
     const ordenadas = ordenaPorDependencia(tarefas);
 
+    const prevInicio = new Map();
+    if (Array.isArray(agendaAnterior)) {
+      for (const a of agendaAnterior) prevInicio.set(a.id, a.inicio);
+    }
+
     const agenda = [];
     const porId = new Map();
 
     for (const t of ordenadas) {
-      const inicio = primeiroInicioLivre(t, agenda, pessoas, regrasRecursos, aPartirDe);
+      const inicio = primeiroInicioLivre(t, agenda, pessoas, regrasRecursos, aPartirDe, prevInicio);
       const item = {
         id: t.id,
         nome: t.nome,

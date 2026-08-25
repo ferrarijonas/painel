@@ -206,6 +206,23 @@ body {
   z-index: 1;
 }
 
+.gridlinha-menor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(226, 222, 215, 0.35);
+  z-index: 1;
+}
+
+.tick-menor {
+  position: absolute;
+  bottom: 0;
+  height: 6px;
+  width: 1px;
+  background: rgba(110, 106, 100, 0.5);
+}
+
 .conectores {
   position: absolute;
   left: 0;
