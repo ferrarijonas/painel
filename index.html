@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
-  <header class="barra">
+  <header class="topbar">
     <div class="marca">
       <img src="marca.png" alt="Pão de Verdade — Forneria Artesanal">
     </div>
@@ -21,12 +21,15 @@
       <div class="subtitulo">Produção · 8h às 18h</div>
     </div>
     <div class="data" id="dataAtual">—</div>
-    <div class="pessoas" id="contadorPessoas">1 pessoa</div>
-    <nav class="acoes">
-      <button class="acao" data-acao="adicionar">+ tarefa</button>
-      <button class="acao" data-acao="pessoas">pessoas</button>
-      <button class="acao" data-acao="dia">dia</button>
-    </nav>
+    <button class="botao-controles" data-acao="menu" aria-expanded="false">menu</button>
+    <div class="controles" id="controles" hidden>
+      <div class="pessoas" id="contadorPessoas">1 pessoa</div>
+      <nav class="acoes">
+        <button class="acao" data-acao="adicionar">+ tarefa</button>
+        <button class="acao" data-acao="pessoas">pessoas</button>
+        <button class="acao" data-acao="dia">dia</button>
+      </nav>
+    </div>
   </header>
 
   <main class="timeline" id="timeline" aria-label="Linha do balanço do dia"></main>

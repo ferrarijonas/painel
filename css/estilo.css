@@ -40,7 +40,7 @@ body {
 }
 
 /* ---------- Barra superior ---------- */
-.barra {
+.topbar {
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -91,7 +91,8 @@ body {
 
 .acoes { display: flex; gap: 0.6rem; }
 
-.acao {
+.acao,
+.botao-controles {
   font-family: var(--sans);
   font-size: 1.05rem;
   font-weight: 600;
@@ -103,6 +104,22 @@ body {
   cursor: pointer;
   transition: background .15s ease, color .15s ease;
 }
+
+/* Controles escondidos atrás do botão "menu" (aparecem num clique) */
+.controles {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.controles[hidden] { display: none; }
+
+[hidden] { display: none !important; }
 
 /* ---------- Timeline (linha do balanço) ---------- */
 .timeline {
@@ -215,6 +232,8 @@ body {
   font-weight: 600;
   color: var(--text);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
 }
 
@@ -253,7 +272,8 @@ body {
   transform: scale(1.03);
 }
 
-.acao.focado {
+.acao.focado,
+.botao-controles.focado {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);

@@ -4,7 +4,7 @@
   // main — orquestra os componentes do painel (boot + ligação).
 
   // SEED_VERSION — força re-seed do dia quando a receita padrão muda.
-  const SEED_VERSION = 3;
+  const SEED_VERSION = 4;
 
   // tarefasPadraoDoDia — dois pães da mesma receita em cadeia:
   // mistura 1h → caixa de fermentação 2h → modelagem 30min →
@@ -12,16 +12,16 @@
   // O Pão 2 começa assim que o Pão 1 sai da masseira (recurso exclusivo).
   function tarefasPadraoDoDia() {
     return [
-      { id: "pao-1-mistura", nome: "Pão 1 · Mistura", duracaoMin: 60, recursos: ["masseira"] },
-      { id: "pao-1-fermenta", nome: "Pão 1 · Fermenta", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-1-mistura"] },
-      { id: "pao-1-modela", nome: "Pão 1 · Modela", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-1-fermenta"] },
-      { id: "pao-1-ambiente", nome: "Pão 1 · Ambiente", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-1-modela"] },
-      { id: "pao-1-forno", nome: "Pão 1 · Forno", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-1-ambiente"] },
-      { id: "pao-2-mistura", nome: "Pão 2 · Mistura", duracaoMin: 60, recursos: ["masseira"] },
-      { id: "pao-2-fermenta", nome: "Pão 2 · Fermenta", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-2-mistura"] },
-      { id: "pao-2-modela", nome: "Pão 2 · Modela", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-2-fermenta"] },
-      { id: "pao-2-ambiente", nome: "Pão 2 · Ambiente", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-2-modela"] },
-      { id: "pao-2-forno", nome: "Pão 2 · Forno", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-2-ambiente"] },
+      { id: "pao-1-mistura", nome: "Pão 1", duracaoMin: 60, recursos: ["masseira"] },
+      { id: "pao-1-fermenta", nome: "Pão 1", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-1-mistura"] },
+      { id: "pao-1-modela", nome: "Pão 1", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-1-fermenta"] },
+      { id: "pao-1-ambiente", nome: "Pão 1", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-1-modela"] },
+      { id: "pao-1-forno", nome: "Pão 1", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-1-ambiente"] },
+      { id: "pao-2-mistura", nome: "Pão 2", duracaoMin: 60, recursos: ["masseira"] },
+      { id: "pao-2-fermenta", nome: "Pão 2", duracaoMin: 120, recursos: ["fermentacao"], dependeDe: ["pao-2-mistura"] },
+      { id: "pao-2-modela", nome: "Pão 2", duracaoMin: 30, recursos: ["modelagem"], dependeDe: ["pao-2-fermenta"] },
+      { id: "pao-2-ambiente", nome: "Pão 2", duracaoMin: 90, recursos: ["ambiente"], dependeDe: ["pao-2-modela"] },
+      { id: "pao-2-forno", nome: "Pão 2", duracaoMin: 60, ateFim: true, recursos: ["forno"], dependeDe: ["pao-2-ambiente"] },
     ];
   }
 
@@ -44,6 +44,7 @@
     global.timelineRenderer.render(timelineEl, agenda, recursos);
     global.remoteNav.coletarNavegaveis();
     global.remoteNav.aplicarFoco();
+    global.remoteNav.reaplicarSelecao();
   }
 
   function recarregar() {
@@ -83,13 +84,44 @@
     });
   });
 
-  // Barra selecionada → remove tarefa (temporário para testar fluxo)
-  timelineEl.addEventListener("painel:selecionar", (e) => {
-    const id = e.detail.id;
-    if (!id) return;
-    diaAtual.tarefas = diaAtual.tarefas.filter((t) => t.id !== id);
-    global.dayStore.salvar(diaAtual);
-    atualizarUI();
+  // Menu de controles — escondido atrás do botão "menu" (aparece num clique).
+  const controlesEl = document.getElementById("controles");
+  const menuBtn = document.querySelector(".botao-controles");
+
+  function abrirControles(aberto) {
+    controlesEl.hidden = !aberto;
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", String(aberto));
+    global.remoteNav.coletarNavegaveis();
+    global.remoteNav.aplicarFoco();
+  }
+
+  if (menuBtn) {
+    menuBtn.addEventListener("click", () => abrirControles(controlesEl.hidden));
+    menuBtn.addEventListener("painel:selecionar", () => abrirControles(controlesEl.hidden));
+  }
+  document.addEventListener("painel:voltar", () => {
+    if (!controlesEl.hidden) abrirControles(false);
+  });
+
+  // Empurrar tarefa — setas empurram no tempo e o scheduler re-encaixa tudo.
+  document.addEventListener("painel:empurrar", (e) => {
+    const { id, dir } = e.detail || {};
+    if (!diaAtual || !id || !dir) return;
+    const tarefa = diaAtual.tarefas.find((t) => t.id === id);
+    if (!tarefa) return;
+    const passo = 15;
+    const antigo = tarefa.inicioMin;
+    tarefa.inicioMin = Math.max(0, (tarefa.inicioMin || 0) + dir * passo);
+    try {
+      const pessoas = global.personCounter.obter();
+      const agenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos);
+      global.dayStore.salvar(diaAtual);
+      aplicar(agenda);
+      statusEl.textContent = `${pessoas} ${pessoas === 1 ? "pessoa" : "pessoas"} · ${agenda.length} tarefa(s)`;
+    } catch (err) {
+      tarefa.inicioMin = antigo;
+      statusEl.textContent = "sem espaço no dia para empurrar";
+    }
   });
 
   // Mudanças vindas de outros clientes (ou do próprio save) → só atualiza a UI.

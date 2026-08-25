@@ -57,7 +57,11 @@
   // respeita todas as regras de recurso e de pessoas, e as dependências.
   function primeiroInicioLivre(tarefa, agenda, pessoas, regrasRecursos, aPartirDe) {
     const duracao = tarefa.duracaoMin;
-    let candidato = aPartirDe === undefined ? T0 : aPartirDe;
+    // `inicioMin` fixa o início mais cedo possível (usado pelo "empurrar").
+    let candidato = Math.max(
+      aPartirDe === undefined ? T0 : aPartirDe,
+      tarefa.inicioMin === undefined ? T0 : tarefa.inicioMin
+    );
 
     // Dependências: esta tarefa só inicia depois que todas as dependentes terminaram.
     if (Array.isArray(tarefa.dependeDe) && tarefa.dependeDe.length) {

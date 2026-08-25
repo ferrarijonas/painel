@@ -7,3 +7,6 @@ node_modules/
 
 # Firebase config real (se mover para segredo, descomentar)
 # firebase-config.js
+
+# Screenshots de diagnóstico
+shot-*.png
