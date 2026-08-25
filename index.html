@@ -34,6 +34,19 @@
 
   <main class="timeline" id="timeline" aria-label="Linha do balanço do dia"></main>
 
+  <div class="config" id="config" hidden>
+    <div class="config-card">
+      <div class="config-titulo" id="configTitulo">—</div>
+      <div class="config-linha">
+        <span class="config-rotulo">Duração</span>
+        <button class="config-btn" data-acao="duracao-menos" aria-label="diminuir duração">−</button>
+        <span class="config-valor" id="configDuracao">—</span>
+        <button class="config-btn" data-acao="duracao-mais" aria-label="aumentar duração">+</button>
+      </div>
+      <button class="config-fechar" data-acao="fechar">fechar</button>
+    </div>
+  </div>
+
   <footer class="rodape" aria-live="polite" id="status">
     carregando…
   </footer>

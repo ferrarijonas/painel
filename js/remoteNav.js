@@ -1,28 +1,39 @@
 (function (global) {
   "use strict";
 
-  // remoteNav — traduz D-pad/teclado/celular em foco, seleção e empurrão (Eng §3).
+  // remoteNav — traduz D-pad/teclado/celular em foco, seleção, empurrão e config (Eng §3).
   // Navegação 10-foot: setas movem o foco, OK seleciona/confirma, Voltar sai.
-  // Tarefa selecionada: setas horizontais empurram no tempo (re-encaixe automático).
+  // Tarefa selecionada: setas empurram no tempo; OK de novo abre as configs.
 
   let focoIndex = -1;
   let itensFocados = [];
   let selecionadaEl = null;
 
-  // visivel — só navegáveis visíveis (controles escondidos ficam fora do foco).
+  // visivel — só navegáveis com layout (escondidos ficam fora do foco).
   function visivel(el) {
-    return el.offsetParent !== null;
+    return el.getClientRects().length > 0;
+  }
+
+  // configPanelVisivel — modal de config aberto?
+  function configPanelVisivel() {
+    const el = document.getElementById("config");
+    return !!el && el.hidden === false;
   }
 
   function coletarNavegaveis() {
-    const controles = Array.from(document.querySelectorAll(".botao-controles, .acao")).filter(visivel);
-    const barras = Array.from(document.querySelectorAll(".barra"));
-    itensFocados = controles.concat(barras);
+    if (configPanelVisivel()) {
+      itensFocados = Array.from(document.querySelectorAll("#config .config-btn, #config .config-fechar")).filter(visivel);
+    } else {
+      const controles = Array.from(document.querySelectorAll(".botao-controles, .acao")).filter(visivel);
+      const barras = Array.from(document.querySelectorAll(".barra"));
+      itensFocados = controles.concat(barras);
+    }
     if (focoIndex >= itensFocados.length) focoIndex = -1;
     return itensFocados;
   }
 
   function aplicarFoco() {
+    document.querySelectorAll(".focado").forEach((el) => el.classList.remove("focado"));
     itensFocados.forEach((el, i) => {
       el.classList.toggle("focado", i === focoIndex);
     });
@@ -37,7 +48,7 @@
     }
   }
 
-  // selecionar — OK: barra alterna seleção; botão dispara a ação.
+  // selecionar — OK: barra alterna seleção (2º OK abre config); botão dispara ação.
   function selecionar() {
     coletarNavegaveis();
     const el = itensFocados[focoIndex];
@@ -45,7 +56,8 @@
 
     if (el.classList.contains("barra")) {
       if (selecionadaEl === el) {
-        deselecionar();
+        // Segundo OK → abre as configs da tarefa (duração etc.).
+        document.dispatchEvent(new CustomEvent("painel:abrirConfig", { detail: { id: el.dataset.id } }));
       } else {
         if (selecionadaEl) selecionadaEl.classList.remove("selecionado");
         selecionadaEl = el;
@@ -57,7 +69,7 @@
     }
 
     el.classList.add("selecionado");
-    el.dispatchEvent(new CustomEvent("painel:selecionar", { detail: { id: el.dataset.acao || el.dataset.id } }));
+    el.dispatchEvent(new CustomEvent("painel:selecionar", { bubbles: true, detail: { id: el.dataset.acao || el.dataset.id } }));
     setTimeout(() => el.classList.remove("selecionado"), 200);
   }
 
@@ -76,12 +88,32 @@
     }
   }
 
-  // mover — setas: navegam o foco; com tarefa selecionada, laterais empurram.
+  // focarPrimeiro — foco no 1º navegável (ex.: abrir config).
+  function focarPrimeiro() {
+    coletarNavegaveis();
+    if (itensFocados.length) {
+      focoIndex = 0;
+      aplicarFoco();
+    }
+  }
+
+  // focarBarra — devolve o foco à barra de um id (ex.: fechar config).
+  function focarBarra(id) {
+    coletarNavegaveis();
+    const idx = itensFocados.findIndex((el) => el.classList.contains("barra") && el.dataset.id === id);
+    if (idx >= 0) {
+      focoIndex = idx;
+      aplicarFoco();
+    }
+  }
+
+  // mover — setas: navegam o foco; com tarefa selecionada (e config fechada),
+  // laterais empurram no tempo.
   function mover(dx, dy) {
     coletarNavegaveis();
     if (itensFocados.length === 0) return;
 
-    if (selecionadaEl) {
+    if (!configPanelVisivel() && selecionadaEl) {
       if (dx !== 0) {
         document.dispatchEvent(new CustomEvent("painel:empurrar", { detail: { id: selecionadaEl.dataset.id, dir: dx } }));
       }
@@ -118,7 +150,8 @@
         case "Enter": e.preventDefault(); selecionar(); break;
         case "Escape":
           e.preventDefault();
-          if (selecionadaEl) deselecionar();
+          if (configPanelVisivel()) document.dispatchEvent(new CustomEvent("painel:fecharConfig"));
+          else if (selecionadaEl) deselecionar();
           else document.dispatchEvent(new CustomEvent("painel:voltar"));
           break;
       }
@@ -138,6 +171,8 @@
     aplicarFoco,
     deselecionar,
     reaplicarSelecao,
+    focarPrimeiro,
+    focarBarra,
     temSelecao: () => !!selecionadaEl,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

@@ -296,6 +296,95 @@ body {
   border-color: var(--accent);
 }
 
+/* ---------- Config da tarefa (modal) ---------- */
+.config {
+  position: fixed;
+  inset: 0;
+  background: rgba(33, 33, 33, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.config[hidden] { display: none; }
+
+.config-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 1.6rem 2rem;
+  min-width: 340px;
+}
+
+.config-titulo {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 1.1rem;
+}
+
+.config-linha {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.config-rotulo {
+  font-size: 1rem;
+  color: var(--text-soft);
+  flex: 1;
+}
+
+.config-btn {
+  font-size: 1.4rem;
+  font-weight: 700;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--text);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+.config-btn.focado {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.config-valor {
+  font-size: 1.3rem;
+  font-weight: 600;
+  min-width: 4.5rem;
+  text-align: center;
+}
+
+.config-fechar {
+  display: block;
+  margin-top: 1.3rem;
+  margin-left: auto;
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+.config-fechar.focado {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
 /* ---------- Rodapé / status ---------- */
 .rodape {
   flex: 0 0 auto;

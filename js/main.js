@@ -4,7 +4,7 @@
   // main — orquestra os componentes do painel (boot + ligação).
 
   // SEED_VERSION — força re-seed do dia quando a receita padrão muda.
-  const SEED_VERSION = 6;
+  const SEED_VERSION = 8;
 
   // COR — cada receita de pão tem sua cor (linha de balanço paralela).
   const COR = { pao1: "#B3541E", pao2: "#7A8B3D" };
@@ -105,6 +105,75 @@
   }
   document.addEventListener("painel:voltar", () => {
     if (!controlesEl.hidden) abrirControles(false);
+  });
+
+  // Config da tarefa — 2º OK (ou duplo clique) abre; ajusta a duração padrão.
+  const configEl = document.getElementById("config");
+  const configTituloEl = document.getElementById("configTitulo");
+  const configDuracaoEl = document.getElementById("configDuracao");
+  const PASSO_DURACAO = 15;
+  let configId = null;
+
+  function formatarDuracao(min) {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    if (h && m) return `${h}h${String(m).padStart(2, "0")}`;
+    if (h) return `${h}h`;
+    return `${m}min`;
+  }
+
+  function abrirConfig(id) {
+    const tarefa = (diaAtual.tarefas || []).find((t) => t.id === id);
+    if (!tarefa) return;
+    configId = id;
+    configTituloEl.textContent = tarefa.nome;
+    configDuracaoEl.textContent = formatarDuracao(tarefa.duracaoMin);
+    configEl.hidden = false;
+    global.remoteNav.focarPrimeiro();
+  }
+
+  function fecharConfig() {
+    configEl.hidden = true;
+    const id = configId;
+    configId = null;
+    global.remoteNav.coletarNavegaveis();
+    if (id) global.remoteNav.focarBarra(id);
+    else global.remoteNav.aplicarFoco();
+  }
+
+  document.addEventListener("painel:abrirConfig", (e) => abrirConfig(e.detail && e.detail.id));
+  document.addEventListener("painel:fecharConfig", fecharConfig);
+
+  configEl.addEventListener("painel:selecionar", (e) => {
+    const acao = e.detail && e.detail.id;
+    if (!configId) return;
+    const tarefa = diaAtual.tarefas.find((t) => t.id === configId);
+    if (!tarefa) return;
+    if (acao === "duracao-menos" || acao === "duracao-mais") {
+      const delta = acao === "duracao-mais" ? PASSO_DURACAO : -PASSO_DURACAO;
+      const antiga = tarefa.duracaoMin;
+      tarefa.duracaoMin = Math.max(15, tarefa.duracaoMin + delta);
+      try {
+        const pessoas = global.personCounter.obter();
+        ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda);
+        global.dayStore.salvar(diaAtual);
+        aplicar(ultimaAgenda);
+      } catch (err) {
+        tarefa.duracaoMin = antiga;
+        statusEl.textContent = "sem espaço no dia para essa duração";
+      }
+      configDuracaoEl.textContent = formatarDuracao(tarefa.duracaoMin);
+    } else if (acao === "fechar") {
+      fecharConfig();
+    }
+  });
+
+  // Duplo clique (mouse/celular) abre as configs da tarefa.
+  timelineEl.addEventListener("dblclick", (e) => {
+    const barra = e.target.closest(".barra");
+    if (barra && barra.dataset.id) {
+      document.dispatchEvent(new CustomEvent("painel:abrirConfig", { detail: { id: barra.dataset.id } }));
+    }
   });
 
   // Empurrar tarefa — setas empurram no tempo e o scheduler re-encaixa tudo.

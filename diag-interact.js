@@ -25,10 +25,14 @@ const passo = () => new Promise((r) => setTimeout(r, 250));
   const estado = async () =>
     page.evaluate(() => {
       const bars = Array.from(document.querySelectorAll(".barra"));
+      const cfg = document.getElementById("config");
       return {
         controlesEscondido: (document.getElementById("controles") || {}).hidden,
+        configVisivel: cfg ? cfg.hidden === false : null,
+        configDuracao: (document.getElementById("configDuracao") || {}).textContent || "",
+        configTitulo: (document.getElementById("configTitulo") || {}).textContent || "",
         selecionadas: bars.filter((b) => b.classList.contains("selecionado")).map((b) => b.dataset.id),
-        focado: Array.from(document.querySelectorAll(".focado")).map((e) => e.className || e.tagName),
+        focado: Array.from(document.querySelectorAll(".focado")).map((e) => (e.className || e.tagName) + ":" + (e.dataset.acao || e.dataset.id || "")),
         rotulos: bars.map((b) => (b.nextElementSibling || {}).textContent || ""),
       };
     });
@@ -61,6 +65,25 @@ const passo = () => new Promise((r) => setTimeout(r, 250));
   await page.keyboard.press("Escape");
   await passo();
   console.log("6 apos Esc (deseleciona):", JSON.stringify(await estado(), null, 2));
+
+  // Config: seleciona a 1ª barra, OK de novo abre config, + aumenta duração.
+  await page.keyboard.press("ArrowDown");
+  await passo();
+  await page.keyboard.press("Enter");
+  await passo();
+  await page.keyboard.press("Enter");
+  await passo();
+  console.log("7 config aberta:", JSON.stringify(await estado(), null, 2));
+
+  // Foco já está no "−" (focarPrimeiro). Aplica −15min (sempre cabe).
+  await page.keyboard.press("Enter");
+  await passo();
+  console.log("8 duracao -15:", JSON.stringify(await estado(), null, 2));
+
+  // Esc fecha config (foco volta à barra).
+  await page.keyboard.press("Escape");
+  await passo();
+  console.log("9 config fechada:", JSON.stringify(await estado(), null, 2));
 
   await browser.close();
 })().catch((e) => {

@@ -91,6 +91,7 @@ node test-render.js                        # boot real (servidor na 8125 + Chrom
 node diag-edge.js <url> [online|nodb]      # diagnóstico no Edge real
 node diag-layout.js <url>                  # retângulos/colisões do layout (sem visão)
 node diag-interact.js <url>                # interação por D-pad (menu, seleção, empurrar)
+node diag-config.js <url>                  # modal de config da tarefa (não-destrutivo)
 node diag-shot.js <url> [png]              # screenshot para inspeção
 ```
 
