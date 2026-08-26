@@ -60,6 +60,7 @@ Módulos em `js/` (IIFE, expostos em `window`, carregados por `<script>` na orde
 | `personCounter` | pessoas presentes (1..4) |
 | `dayStore` | persiste dias por data |
 | `deviceSync` | sincroniza estado compartilhado (Firebase; fallback local em 8s) |
+| `clima` | temperatura atual + previsão por hora (Open-Meteo, Uberlândia) |
 | `timelineRenderer` | desenha a linha do balanço (pistas, trilhas, conectores) |
 | `remoteNav` | foco/seleção por D-pad |
 
@@ -93,8 +94,13 @@ com rede lenta/modo local).
   seta move o foco para o elemento mais próximo na direção — `↓` = etapa de
   baixo (próximo processo), `→` = outro pão na mesma pista, `↑` = sobe.
   O foco começa na 1ª barra; o menu é alcançado com `↑`.
+- **OK alterna seleção**: `OK` numa barra seleciona; `OK` de novo **solta**
+  (nunca fica preso). Config da tarefa abre por **duplo clique** (celular/
+  mouse). `Esc` solta a seleção ou fecha menu/config.
 - Linha vertical "agora" varrendo o dia.
 - Cor por tipo de receita (`COR_PAO`); pistas alternam fundo.
+- **Topo**: relógio com hora atual + faixa do clima (temperatura agora e
+  gráfico por hora "daqui pra frente", Open-Meteo).
 
 ## Comandos
 

@@ -69,22 +69,26 @@ const passo = () => new Promise((r) => setTimeout(r, 250));
   await passo();
   console.log("7 apos Esc (deseleciona):", JSON.stringify(await estado(), null, 2));
 
-  // Config: Enter seleciona, Enter de novo abre config, −15 na duração.
+  // OK alterna: Enter seleciona, Enter de novo SOLTA (nunca fica preso).
   await page.keyboard.press("Enter");
   await passo();
   await page.keyboard.press("Enter");
   await passo();
-  console.log("8 config aberta:", JSON.stringify(await estado(), null, 2));
+  console.log("8 apos Enter 2x (solta):", JSON.stringify(await estado(), null, 2));
 
-  // Foco já está no "−" (focarPrimeiro). Aplica −15min (sempre cabe).
+  // Config abre por duplo clique (celular/mouse) e ajusta a duração −15.
+  await page.evaluate(() => {
+    const b = document.querySelector(".barra");
+    if (b) b.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+  });
+  await passo();
+  console.log("9 config aberta:", JSON.stringify(await estado(), null, 2));
   await page.keyboard.press("Enter");
   await passo();
-  console.log("9 duracao -15:", JSON.stringify(await estado(), null, 2));
-
-  // Esc fecha config (foco volta à barra).
+  console.log("10 duracao -15:", JSON.stringify(await estado(), null, 2));
   await page.keyboard.press("Escape");
   await passo();
-  console.log("10 config fechada:", JSON.stringify(await estado(), null, 2));
+  console.log("11 config fechada:", JSON.stringify(await estado(), null, 2));
 
   await browser.close();
 })().catch((e) => {

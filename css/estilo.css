@@ -71,12 +71,27 @@ body {
   letter-spacing: 0.04em;
 }
 
-.data {
-  font-family: var(--serif);
-  font-size: 1.1rem;
-  color: var(--accent);
+.relogio {
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.05;
   white-space: nowrap;
+}
+
+.relogio-hora {
+  font-family: var(--serif);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.relogio-data {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  text-transform: capitalize;
 }
 
 .pessoas {
@@ -120,6 +135,86 @@ body {
 .controles[hidden] { display: none; }
 
 [hidden] { display: none !important; }
+
+/* ---------- Faixa do clima (temperatura + previsão por hora) ---------- */
+.clima {
+  flex: 0 0 auto;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 0.25rem 1.2rem;
+  background: linear-gradient(90deg, var(--bg), rgba(74, 46, 27, 0.06), var(--bg));
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.clima-agora {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 0 0 auto;
+}
+
+.clima-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.clima-temp {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.clima-det {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  line-height: 1.2;
+  max-width: 10rem;
+}
+
+.clima-grafico {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  height: 52px;
+}
+
+.clima-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1 1 0;
+  min-width: 0;
+  gap: 2px;
+}
+
+.clima-g-temp {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.clima-barra {
+  width: 70%;
+  max-width: 20px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--accent), var(--gold));
+  opacity: 0.85;
+}
+
+.clima-g-hora {
+  font-size: 0.68rem;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
 
 /* ---------- Timeline (linha do balanço) ---------- */
 .timeline {
@@ -519,12 +614,19 @@ body {
   .marca img { height: 34px; }
   .titulo { font-size: 1.2rem; }
   .subtitulo { font-size: 0.7rem; }
-  .data { font-size: 1rem; }
+  .relogio-hora { font-size: 1.6rem; }
+  .relogio-data { font-size: 0.72rem; }
   .pessoas { font-size: 0.85rem; padding: 0.2rem 0.7rem; }
   .acao,
   .botao-controles { font-size: 0.85rem; padding: 0.32rem 0.8rem; }
   .canto,
   .pistas { width: 132px; flex-basis: 132px; }
   .rotulo-pista { padding: 0 0.7rem; font-size: 0.85rem; }
+  .clima { padding: 0.25rem 1rem; gap: 0.8rem; }
+  .clima-temp { font-size: 1.3rem; }
+  .clima-emoji { font-size: 1.2rem; }
+  .clima-det { font-size: 0.72rem; }
+  .clima-g-temp { font-size: 0.7rem; }
+  .clima-g-hora { font-size: 0.65rem; }
   .rodape { font-size: 0.8rem; padding: 0.25rem 1rem; }
 }

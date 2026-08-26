@@ -26,9 +26,11 @@
   const ROTULO_EXTRA = { livre: "Livre" };
 
   // Espaços dentro de cada pista (px): respiro do topo, da base e entre trilhas.
-  const TOPO_PAD = 18;
+  // TOPO_PAD e TRILHA_GAP reservam lugar para o rótulo da barra de baixo
+  // (rótulo fica ~20px acima da barra), evitando sobreposição barra×rótulo.
+  const TOPO_PAD = 24;
   const BASE_PAD = 4;
-  const TRILHA_GAP = 24;
+  const TRILHA_GAP = 26;
   // Respiro à direita da timeline (o fim do dia não encosta na borda da tela).
   const R_PAD = 24;
 
@@ -270,7 +272,7 @@
       const rotulo = document.createElement("div");
       rotulo.className = "rotulo-barra";
       rotulo.style.left = x + "px";
-      rotulo.style.top = Math.max(0, y - 26) + "px";
+      rotulo.style.top = Math.max(0, y - 22) + "px";
       rotulo.style.maxWidth = Math.max(w, 60) + "px";
       rotulo.textContent = `${item.nome} · ${horaTexto(item.inicio)}–${horaTexto(item.fim)}`;
       rotulo.title = rotulo.textContent;

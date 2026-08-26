@@ -20,7 +20,10 @@
       <h1 class="titulo">Linha do Dia</h1>
       <div class="subtitulo">Produção 8h–18h · Abertura 12h às 18h</div>
     </div>
-    <div class="data" id="dataAtual">—</div>
+    <div class="relogio" id="relogio" aria-label="Hora atual">
+      <span class="relogio-hora" id="horaAtual">--:--</span>
+      <span class="relogio-data" id="dataAtual">—</span>
+    </div>
     <button class="botao-controles" data-acao="menu" aria-expanded="false">menu</button>
     <div class="controles" id="controles" hidden>
       <div class="pessoas" id="contadorPessoas">1 pessoa</div>
@@ -31,6 +34,10 @@
       </nav>
     </div>
   </header>
+
+  <section class="clima" id="clima" aria-label="Temperatura e previsão por hora">
+    carregando clima…
+  </section>
 
   <main class="timeline" id="timeline" aria-label="Linha do balanço do dia"></main>
 
@@ -62,6 +69,7 @@
   <script src="js/personCounter.js"></script>
   <script src="js/dayStore.js"></script>
   <script src="js/deviceSync.js"></script>
+  <script src="js/clima.js"></script>
   <script src="js/timelineRenderer.js"></script>
   <script src="js/remoteNav.js"></script>
   <script src="js/main.js"></script>

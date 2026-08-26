@@ -89,7 +89,7 @@
     }
   }
 
-  // selecionar — OK: barra alterna seleção (2º OK abre config); botão dispara ação.
+  // selecionar — OK: barra alterna seleção (2º OK solta); botão dispara ação.
   function selecionar() {
     coletarNavegaveis();
     const el = itensFocados[focoIndex];
@@ -97,12 +97,13 @@
 
     if (el.classList.contains("barra")) {
       if (selecionadaEl === el) {
-        // Segundo OK → abre as configs da tarefa (duração etc.).
-        document.dispatchEvent(new CustomEvent("painel:abrirConfig", { detail: { id: el.dataset.id } }));
+        // Segundo OK → solta a seleção (nunca fica preso).
+        deselecionar();
       } else {
         if (selecionadaEl) selecionadaEl.classList.remove("selecionado");
         selecionadaEl = el;
         selecionadaEl.classList.add("selecionado");
+        garraAtiva = "corpo";
         document.dispatchEvent(new CustomEvent("painel:selecionarTarefa", { detail: { id: el.dataset.id, on: true } }));
       }
       aplicarFoco();

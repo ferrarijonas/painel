@@ -28,6 +28,7 @@
   }
 
   const timelineEl = document.getElementById("timeline");
+  const horaEl = document.getElementById("horaAtual");
   const dataEl = document.getElementById("dataAtual");
   const pessoasEl = document.getElementById("contadorPessoas");
   const statusEl = document.getElementById("status");
@@ -35,6 +36,19 @@
   const recursos = Object.assign({}, global.resourceRegistry.RECURSOS_PADRAO);
   let diaAtual = null;
   let ultimaAgenda = [];
+
+  // relogio — hora e data atuais no topo (atualiza a cada segundo).
+  function atualizarRelogio() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    if (horaEl) horaEl.textContent = `${hh}:${mm}`;
+    const mes = String(d.getMonth() + 1).padStart(2, "0");
+    const dia = String(d.getDate()).padStart(2, "0");
+    const semana = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"][d.getDay()];
+    if (dataEl) dataEl.textContent = `${semana} ${dia}/${mes}/${d.getFullYear()}`;
+  }
 
   function hojeISO() {
     const d = new Date();
@@ -63,7 +77,7 @@
   // atualizarStatus — rodapé: modo mover (se há tarefa selecionada) ou contagem.
   function atualizarStatus(pessoas, agenda) {
     if (global.remoteNav.temSelecao()) {
-      statusEl.textContent = "modo mover · ←/→ ajusta · ↑/↓ garra · esc volta";
+      statusEl.textContent = "selecionada · ←/→ move · ↑/↓ garra · OK solta";
       return;
     }
     const local = global.deviceSync.emModoLocal ? global.deviceSync.emModoLocal() : false;
@@ -71,7 +85,6 @@
   }
 
   function atualizarUI() {
-    dataEl.textContent = diaAtual.data;
     const p = global.personCounter.obter();
     pessoasEl.textContent = `${p} ${p === 1 ? "pessoa" : "pessoas"}`;
     recarregar();
@@ -303,4 +316,10 @@
     global.remoteNav.inicializar();
     atualizarUI();
   });
+
+  // Relógio e clima do dia — começam já no boot (não dependem do dia).
+  atualizarRelogio();
+  setInterval(atualizarRelogio, 1000);
+  const climaEl = document.getElementById("clima");
+  if (climaEl && global.clima) global.clima.inicializar(climaEl);
 })(typeof window !== "undefined" ? window : this);
