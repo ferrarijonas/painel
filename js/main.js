@@ -64,6 +64,7 @@
     global.remoteNav.aplicarFoco();
     global.remoteNav.reaplicarSelecao();
     global.timelineRenderer.marcarGarras(global.remoteNav.garraAtiva());
+    if (global.clima) global.clima.aplicar();
   }
 
   function recarregar() {
@@ -320,6 +321,5 @@
   // Relógio e clima do dia — começam já no boot (não dependem do dia).
   atualizarRelogio();
   setInterval(atualizarRelogio, 1000);
-  const climaEl = document.getElementById("clima");
-  if (climaEl && global.clima) global.clima.inicializar(climaEl);
+  if (global.clima) global.clima.inicializar();
 })(typeof window !== "undefined" ? window : this);

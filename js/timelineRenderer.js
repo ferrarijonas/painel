@@ -27,10 +27,12 @@
 
   // Espaços dentro de cada pista (px): respiro do topo, da base e entre trilhas.
   // TOPO_PAD e TRILHA_GAP reservam lugar para o rótulo da barra de baixo
-  // (rótulo fica ~20px acima da barra), evitando sobreposição barra×rótulo.
-  const TOPO_PAD = 24;
+  // (rótulo fica ~18px acima da barra), evitando sobreposição barra×rótulo.
+  const TOPO_PAD = 20;
   const BASE_PAD = 4;
-  const TRILHA_GAP = 26;
+  const TRILHA_GAP = 22;
+  // Altura máxima da barra — timeline mais fina (não domina a pista).
+  const BAR_MAX = 44;
   // Respiro à direita da timeline (o fim do dia não encosta na borda da tela).
   const R_PAD = 24;
 
@@ -130,7 +132,15 @@
       const tick = document.createElement("div");
       tick.className = "hora";
       tick.style.left = percentual(m) + "%";
-      tick.textContent = horaTexto(m);
+      const horaNome = document.createElement("span");
+      horaNome.className = "hora-nome";
+      horaNome.textContent = horaTexto(m);
+      const temp = document.createElement("span");
+      temp.className = "hora-temp vazio";
+      temp.dataset.hora = String(Math.floor(m / 60) + 8);
+      temp.textContent = "—";
+      tick.appendChild(horaNome);
+      tick.appendChild(temp);
       eixo.appendChild(tick);
     }
     // Quebras de 15min no eixo (marcas menores).
@@ -181,8 +191,8 @@
     const W = (cenario.clientWidth || 800) - R_PAD;
     const laneH = H / Math.max(pistas.length, 1);
     const barH = Math.max(
-      26,
-      Math.min(120, (laneH - TOPO_PAD - BASE_PAD - (maxTrilhas - 1) * TRILHA_GAP) / maxTrilhas)
+      22,
+      Math.min(BAR_MAX, (laneH - TOPO_PAD - BASE_PAD - (maxTrilhas - 1) * TRILHA_GAP) / maxTrilhas)
     );
 
     const idxPista = new Map();
@@ -272,7 +282,7 @@
       const rotulo = document.createElement("div");
       rotulo.className = "rotulo-barra";
       rotulo.style.left = x + "px";
-      rotulo.style.top = Math.max(0, y - 22) + "px";
+      rotulo.style.top = Math.max(0, y - 18) + "px";
       rotulo.style.maxWidth = Math.max(w, 60) + "px";
       rotulo.textContent = `${item.nome} · ${horaTexto(item.inicio)}–${horaTexto(item.fim)}`;
       rotulo.title = rotulo.textContent;
