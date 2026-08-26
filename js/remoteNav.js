@@ -216,6 +216,46 @@
           break;
       }
     });
+
+    // Clique (mouse/celular/TV): foca o elemento clicado e age como OK.
+    // Barra → seleciona/solta; botão de ação → dispara painel:selecionar;
+    // menu → só foca (o clique nativo do main.js já alterna o painel).
+    // Clique repetido rápido na mesma barra = duplo clique (abre config no
+    // main.js), então não solta — só o clique espaçado solta a seleção.
+    let ultimoClickId = null;
+    let ultimoClickTempo = 0;
+    document.addEventListener("click", (e) => {
+      const alvo = e.target.closest
+        ? e.target.closest(".barra, .botao-controles, .acao, .config-btn, .config-fechar")
+        : null;
+      if (!alvo) return;
+      coletarNavegaveis();
+      const idx = itensFocados.indexOf(alvo);
+      if (idx >= 0) {
+        focoIndex = idx;
+        aplicarFoco();
+      }
+
+      if (alvo.classList.contains("barra")) {
+        const agora = Date.now();
+        if (alvo.dataset.id === ultimoClickId && agora - ultimoClickTempo < 400) {
+          // Vem aí o dblclick → deixa o config abrir (main.js).
+          ultimoClickId = null;
+          return;
+        }
+        ultimoClickId = alvo.dataset.id || null;
+        ultimoClickTempo = agora;
+        selecionar();
+      } else if (alvo.classList.contains("acao")) {
+        // Botão de ação: dispara uma única vez (painel:selecionar).
+        alvo.dispatchEvent(new CustomEvent("painel:selecionar", { bubbles: true, detail: { id: alvo.dataset.acao } }));
+      }
+      // .botao-controles: o clique nativo já alterna o menu (main.js).
+    });
+
+    // O navegador (incluindo celular) dispara "click" para toque e mouse,
+    // então um único handler cobre tudo (sem duplicar com touchend).
+
     coletarNavegaveis();
     // O foco real é definido no 1º render (as barras ainda não existem aqui).
     aplicarFoco();
