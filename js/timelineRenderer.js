@@ -255,6 +255,26 @@
       cenario.appendChild(rotulo);
     }
 
+      // Marcos do dia: abertura e hora de assar o pão (faixa fixa 8h-18h).
+    // Regra da padaria: pão assado 1h antes de abrir (11h), assar 45min (10:15),
+    // forno aquecendo 15min (10:00); abertura às 12h.
+    const marcos = [
+      { min: 120, rotulo: "Aquecer forno", classe: "marco-morno" },
+      { min: 135, rotulo: "Assar", classe: "marco-morno" },
+      { min: 180, rotulo: "Pão pronto", classe: "marco-morno" },
+      { min: 240, rotulo: "Abertura", classe: "marco-abertura" },
+    ];
+    for (const m of marcos) {
+      const linha = document.createElement("div");
+      linha.className = "marco " + m.classe;
+      linha.style.left = percentual(m.min) + "%";
+      const etq = document.createElement("span");
+      etq.className = "marco-rotulo";
+      etq.textContent = m.rotulo;
+      linha.appendChild(etq);
+      cenario.appendChild(linha);
+    }
+
     // Linha do "agora".
     agoraEl = document.createElement("div");
     agoraEl.className = "agora";

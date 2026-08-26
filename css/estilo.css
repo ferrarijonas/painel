@@ -278,6 +278,46 @@ body {
   padding: 0.1rem 0.45rem;
 }
 
+/* Marcos do dia: abertura e hora de assar (linhas rotuladas) */
+.marco {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.marco-morno {
+  background: rgba(138, 122, 92, 0.5);
+  border-left: 1px dashed rgba(138, 122, 92, 0.8);
+}
+
+.marco-abertura {
+  background: var(--gold);
+  width: 3px;
+  border-left: 1px dashed var(--gold);
+}
+
+.marco-rotulo {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--gold);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+}
+
+.marco-morno .marco-rotulo {
+  background: var(--text-soft);
+}
+
 /* Estados de foco/seleção (D-pad) */
 .focado {
   border-color: var(--foco);
