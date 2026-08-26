@@ -214,9 +214,9 @@ body {
   opacity: 0.8;
 }
 
-/* Temperatura por hora no eixo — destaque claro em relação à hora. */
+/* Temperatura por hora no eixo — mesma altura da hora, distinta pela cor/peso. */
 .hora-temp {
-  font-size: 0.9rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--accent);
   line-height: 1;
@@ -230,7 +230,7 @@ body {
 
 .hora-temp.agora {
   color: var(--gold);
-  font-size: 1rem;
+  font-size: 0.72rem;
   text-shadow: 0 0 6px rgba(138, 122, 92, 0.35);
 }
 
@@ -573,8 +573,8 @@ body {
   .pistas { width: 118px; flex-basis: 118px; }
   .rotulo-pista { padding: 0 0.6rem; font-size: 0.78rem; }
   .hora { font-size: 0.68rem; }
-  .hora-temp { font-size: 0.82rem; }
-  .hora-temp.agora { font-size: 0.9rem; }
+  .hora-temp { font-size: 0.68rem; }
+  .hora-temp.agora { font-size: 0.68rem; }
   .marco-chip { font-size: 0.5rem; padding: 0.08rem 0.3rem; }
   .rotulo-barra { font-size: 0.76rem; }
   .rodape { font-size: 0.8rem; padding: 0.25rem 1rem; }
