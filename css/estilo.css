@@ -72,12 +72,35 @@ body {
 }
 
 .relogio {
-  margin-left: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   line-height: 1.05;
   white-space: nowrap;
+}
+
+/* Resumo do clima (minimalista) ao lado do relógio: ícone + temp atual. */
+.clima-mini {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  white-space: nowrap;
+}
+
+.clima-mini-emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.clima-mini-temp {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .relogio-hora {
@@ -179,16 +202,21 @@ body {
   display: flex;
   flex-direction: row;
   align-items: baseline;
-  gap: 0.2rem;
-  font-size: 0.78rem;
+  gap: 0.18rem;
+  font-size: 0.72rem;
   color: var(--text-soft);
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 
-/* Temperatura por hora no eixo — vem do clima (Open-Meteo). */
+.hora-nome {
+  color: var(--text-soft);
+  opacity: 0.8;
+}
+
+/* Temperatura por hora no eixo — destaque claro em relação à hora. */
 .hora-temp {
-  font-size: 0.72rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--accent);
   line-height: 1;
@@ -197,11 +225,13 @@ body {
 .hora-temp.vazio {
   color: rgba(110, 106, 100, 0.45);
   font-weight: 400;
+  font-size: 0.72rem;
 }
 
 .hora-temp.agora {
   color: var(--gold);
-  font-size: 0.78rem;
+  font-size: 1rem;
+  text-shadow: 0 0 6px rgba(138, 122, 92, 0.35);
 }
 
 .miolo {
@@ -559,15 +589,18 @@ body {
   .subtitulo { font-size: 0.7rem; }
   .relogio-hora { font-size: 1.6rem; }
   .relogio-data { font-size: 0.72rem; }
+  .clima-mini { padding: 0.18rem 0.6rem; gap: 0.3rem; }
+  .clima-mini-emoji { font-size: 0.95rem; }
+  .clima-mini-temp { font-size: 0.9rem; }
   .pessoas { font-size: 0.85rem; padding: 0.2rem 0.7rem; }
   .acao,
   .botao-controles { font-size: 0.85rem; padding: 0.32rem 0.8rem; }
   .canto,
   .pistas { width: 118px; flex-basis: 118px; }
   .rotulo-pista { padding: 0 0.6rem; font-size: 0.78rem; }
-  .hora { font-size: 0.72rem; }
-  .hora-temp { font-size: 0.66rem; }
-  .hora-temp.agora { font-size: 0.74rem; }
+  .hora { font-size: 0.68rem; }
+  .hora-temp { font-size: 0.82rem; }
+  .hora-temp.agora { font-size: 0.9rem; }
   .marco-chip { font-size: 0.5rem; padding: 0.08rem 0.3rem; }
   .rotulo-barra { font-size: 0.76rem; }
   .rodape { font-size: 0.8rem; padding: 0.25rem 1rem; }

@@ -46,6 +46,11 @@
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   }
 
+  // horaCurta — "14h" para o eixo (abreviado; rótulos das barras usam HH:MM).
+  function horaCurta(min) {
+    return Math.floor(min / 60) + 8 + "h";
+  }
+
   function percentual(min) {
     return ((min - T0) / (T1 - T0)) * 100;
   }
@@ -134,7 +139,7 @@
       tick.style.left = percentual(m) + "%";
       const horaNome = document.createElement("span");
       horaNome.className = "hora-nome";
-      horaNome.textContent = horaTexto(m);
+      horaNome.textContent = horaCurta(m);
       const temp = document.createElement("span");
       temp.className = "hora-temp vazio";
       temp.dataset.hora = String(Math.floor(m / 60) + 8);

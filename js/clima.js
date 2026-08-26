@@ -18,6 +18,13 @@
     95: "⛈️", 96: "⛈️", 99: "⛈️",
   };
 
+  // condicao — emoji "minimalista": sol, nuvem, chuva ou frio (pela temperatura).
+  function condicao(codigo, temp) {
+    if (temp !== undefined && temp <= 12) return "🥶";
+    if (temp !== undefined && temp >= 32) return "☀️";
+    return CODIGO[codigo] || "🌡️";
+  }
+
   let timer = null;
   let dados = null;
 
@@ -58,7 +65,8 @@
   }
 
   // aplicar — preenche a temperatura de cada hora do eixo (só as futuras
-  // ou atuais; as passadas ficam apagadas), com destaque na hora "agora".
+  // ou atuais; as passadas ficam apagadas), com destaque na hora "agora",
+  // e o resumo minimalista ao lado do relógio (ícone + temp atual).
   function aplicar() {
     if (!dados) return;
     const agora = dados.current || {};
@@ -90,8 +98,21 @@
       el.style.opacity = passado ? "0.45" : "1";
     });
 
-    // Título da página: temperatura atual (acessível p/ quem usa a página).
+    // Resumo atual ao lado do relógio: ícone (sol/chuva/frio) + temperatura.
     const atual = agora.temperature_2m;
+    const badge = document.getElementById("climaMini");
+    if (badge) {
+      const emojiEl = badge.querySelector(".clima-mini-emoji");
+      const tempEl = badge.querySelector(".clima-mini-temp");
+      if (atual !== undefined) {
+        if (emojiEl) emojiEl.textContent = condicao(agora.weather_code, atual);
+        if (tempEl) tempEl.textContent = Math.round(atual) + "°";
+      } else if (emojiEl) {
+        emojiEl.textContent = "—";
+      }
+    }
+
+    // Título da página: temperatura atual (acessível p/ quem usa a página).
     if (atual !== undefined && document.title) {
       document.title = `${Math.round(atual)}° · ${GEO.nome} — painel`;
     }
