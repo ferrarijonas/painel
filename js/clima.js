@@ -88,13 +88,13 @@
       if (valor === undefined) {
         el.textContent = "—";
         el.classList.add("vazio");
-        el.classList.remove("agora");
+        el.classList.remove("atual");
         return;
       }
       el.textContent = Math.round(valor) + "°";
       el.classList.remove("vazio");
-      if (hh === agoraHora) el.classList.add("agora");
-      else el.classList.remove("agora");
+      if (hh === agoraHora) el.classList.add("atual");
+      else el.classList.remove("atual");
       el.style.opacity = passado ? "0.45" : "1";
     });
 
