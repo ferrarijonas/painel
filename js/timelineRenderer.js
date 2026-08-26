@@ -26,9 +26,11 @@
   const ROTULO_EXTRA = { livre: "Livre" };
 
   // Espaços dentro de cada pista (px): respiro do topo, da base e entre trilhas.
-  const TOPO_PAD = 22;
-  const BASE_PAD = 6;
-  const TRILHA_GAP = 30;
+  const TOPO_PAD = 18;
+  const BASE_PAD = 4;
+  const TRILHA_GAP = 24;
+  // Respiro à direita da timeline (o fim do dia não encosta na borda da tela).
+  const R_PAD = 24;
 
   let ultimo = null;
   let agoraEl = null;
@@ -137,6 +139,24 @@
       tick.style.left = percentual(m) + "%";
       eixo.appendChild(tick);
     }
+    // Chips de marco na faixa de horas (não colidem com as barras):
+    // abertura às 12h e a hora de assar (pão assado 1h antes de abrir,
+    // assar 45min às 10:15, forno aquecendo 15min às 10:00).
+    // Índices ímpares descem uma fileira para os chips próximos não colidirem.
+    const marcos = [
+      { min: 120, rotulo: "Aquecer forno", classe: "marco-chip-morno" },
+      { min: 135, rotulo: "Assar", classe: "marco-chip-morno" },
+      { min: 180, rotulo: "Pão pronto", classe: "marco-chip-morno" },
+      { min: 240, rotulo: "Abertura", classe: "marco-chip-abertura" },
+    ];
+    for (let k = 0; k < marcos.length; k++) {
+      const m = marcos[k];
+      const chip = document.createElement("span");
+      chip.className = "marco-chip " + m.classe + (k % 2 ? " marco-chip-baixo" : "");
+      chip.style.left = percentual(m.min) + "%";
+      chip.textContent = m.rotulo;
+      eixo.appendChild(chip);
+    }
     topo.appendChild(canto);
     topo.appendChild(eixo);
 
@@ -154,7 +174,9 @@
     el.appendChild(miolo);
 
     const H = cenario.clientHeight || 400;
-    const W = cenario.clientWidth || 800;
+    // W = largura útil (conteúdo): descontamos o respiro da direita (R_PAD),
+    // igual ao padding-right do .cenario, para o fim do dia não encostar na borda.
+    const W = (cenario.clientWidth || 800) - R_PAD;
     const laneH = H / Math.max(pistas.length, 1);
     const barH = Math.max(
       26,
@@ -255,23 +277,12 @@
       cenario.appendChild(rotulo);
     }
 
-      // Marcos do dia: abertura e hora de assar o pão (faixa fixa 8h-18h).
-    // Regra da padaria: pão assado 1h antes de abrir (11h), assar 45min (10:15),
-    // forno aquecendo 15min (10:00); abertura às 12h.
-    const marcos = [
-      { min: 120, rotulo: "Aquecer forno", classe: "marco-morno" },
-      { min: 135, rotulo: "Assar", classe: "marco-morno" },
-      { min: 180, rotulo: "Pão pronto", classe: "marco-morno" },
-      { min: 240, rotulo: "Abertura", classe: "marco-abertura" },
-    ];
+      // Linhas verticais de marco (abertura/assar) atravessando as pistas.
+    // Os chips de rótulo ficam na faixa de horas (topo), sem colidir com barras.
     for (const m of marcos) {
       const linha = document.createElement("div");
-      linha.className = "marco " + m.classe;
+      linha.className = "marco " + m.classe.replace("marco-chip-", "marco-");
       linha.style.left = percentual(m.min) + "%";
-      const etq = document.createElement("span");
-      etq.className = "marco-rotulo";
-      etq.textContent = m.rotulo;
-      linha.appendChild(etq);
       cenario.appendChild(linha);
     }
 
