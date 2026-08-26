@@ -202,12 +202,12 @@
   });
 
   // Verificação de versão — avisa quando um novo deploy chegou ao GitHub Pages.
-  // Dados do dia (Firebase) sincronizam sozinhos; código novo exige reload.
-  const versaoEl = document.getElementById("versaoAviso");
+  // Dados do dia (Firebase) sincronizam sozinhos; código novo recarrega sozinho.
   let versaoCarregada = null;
+  let recarregando = false;
 
   function checarVersao() {
-    if (!versaoEl) return;
+    if (recarregando) return;
     fetch("versao.json?t=" + Date.now(), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error("http"))))
       .then((j) => {
@@ -216,17 +216,17 @@
           versaoCarregada = j.versao;
           return;
         }
-        if (j.versao !== versaoCarregada) versaoEl.hidden = false;
+        if (j.versao !== versaoCarregada) {
+          recarregando = true;
+          // Recarrega automático para pegar a versão nova (dados ficam no Firebase).
+          location.reload(true);
+        }
       })
       .catch(() => {});
   }
 
-  if (versaoEl) {
-    versaoEl.addEventListener("painel:selecionar", () => location.reload(true));
-    versaoEl.addEventListener("click", () => location.reload(true));
-    setInterval(checarVersao, 60000);
-    checarVersao();
-  }
+  setInterval(checarVersao, 30000);
+  checarVersao();
 
   // Seleção/deseleção de tarefa → atualiza garras, dica de modo e status.
   document.addEventListener("painel:selecionarTarefa", () => {

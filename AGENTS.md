@@ -27,9 +27,9 @@ publicada, não a local. Sequência obrigatória:
 4. Aguardar o GitHub Pages atualizar (~60–75s)
 5. Testar em `https://ferrarijonas.github.io/painel/` via `node diag-edge.js https://ferrarijonas.github.io/painel/ online`
 
-O painel mostra um aviso "nova versão · OK para atualizar" quando detecta um
-deploy novo (via `versao.json`) — dados do dia (Firebase) sincronizam sozinhos;
-código novo exige um reload da página.
+O painel **atualiza sozinho**: quando detecta um deploy novo (via `versao.json`),
+recarrega automaticamente a página (~30s após o push). Dados do dia (Firebase)
+sincronizam sozinhos; o reload é transparente para quem está vendo a TV.
 
 Não parar antes do passo 5. Página oficial: `https://ferrarijonas.github.io/painel/`.
 
