@@ -81,7 +81,9 @@
   // primeiroInicioLivre — acha o menor início >= aPartirDe onde a tarefa
   // respeita todas as regras de recurso e de pessoas, e as dependências.
   // `prevInicio` preserva a posição anterior da tarefa (não re-embaralha o resto).
-  function primeiroInicioLivre(tarefa, agenda, pessoas, regrasRecursos, aPartirDe, prevInicio) {
+  // `naCadeia` (cadeia do idFoco): a receita segue sem folga — ignora âncoras
+  // antigas (inicioMin/posição) e começa logo após o fim dos predecessores.
+  function primeiroInicioLivre(tarefa, agenda, pessoas, regrasRecursos, aPartirDe, prevInicio, naCadeia) {
     const duracao = tarefa.duracaoMin;
 
     // Dependências: esta tarefa só inicia depois que todas as dependentes terminaram.
@@ -112,11 +114,18 @@
       // Não segurou o fim → segue para o encaixe normal (cadeia acompanha).
     }
 
-    // Sem fim fixo: `inicioMin` é intenção explícita (empurrar) e vence a
+    // Cadeia do foco: segue sem folga — começa logo após o fim dos
+    // predecessores, sem levar em conta posição/âncora antiga.
+    // Fora da cadeia: `inicioMin` é intenção explícita (empurrar) e vence a
     // preservação; sem inicioMin, preserva-se a posição anterior.
-    const anterior = prevInicio && prevInicio.has(tarefa.id) ? prevInicio.get(tarefa.id) : T0;
-    const base = tarefa.inicioMin !== undefined ? tarefa.inicioMin : anterior;
-    let candidato = Math.max(aPartirDe === undefined ? T0 : aPartirDe, base, depFim);
+    let candidato;
+    if (naCadeia) {
+      candidato = Math.max(aPartirDe === undefined ? T0 : aPartirDe, depFim);
+    } else {
+      const anterior = prevInicio && prevInicio.has(tarefa.id) ? prevInicio.get(tarefa.id) : T0;
+      const base = tarefa.inicioMin !== undefined ? tarefa.inicioMin : anterior;
+      candidato = Math.max(aPartirDe === undefined ? T0 : aPartirDe, base, depFim);
+    }
 
     // Candidato vai avançando enquanto alguma regra bloquear.
     const fimDe = (c) => (tarefa.ateFim ? T1 : c + duracao);
@@ -153,15 +162,73 @@
     return ordem;
   }
 
+  // dependentesDe — ids das tarefas que dependem de `id` transitivamente
+  // (a cadeia que acompanha um movimento: massa → fermenta → modela → assa).
+  function dependentesDe(tarefas, id) {
+    const deps = new Set();
+    const fila = [id];
+    while (fila.length) {
+      const cur = fila.shift();
+      for (const t of tarefas) {
+        if ((t.dependeDe || []).indexOf(cur) !== -1 && !deps.has(t.id)) {
+          deps.add(t.id);
+          fila.push(t.id);
+        }
+      }
+    }
+    return deps;
+  }
+
+  // predecessoresDe — ids das tarefas das quais `id` depende transitivamente
+  // (predecessores devem ser encaixados antes do foco).
+  function predecessoresDe(tarefas, id) {
+    const preds = new Set();
+    const fila = [id];
+    while (fila.length) {
+      const cur = fila.shift();
+      const t = tarefas.find((x) => x.id === cur);
+      if (!t) continue;
+      for (const depId of t.dependeDe || []) {
+        if (!preds.has(depId)) {
+          preds.add(depId);
+          fila.push(depId);
+        }
+      }
+    }
+    return preds;
+  }
+
   // calculaEncaixe — orquestrador principal (regra de entrada pública).
   // `agendaAnterior` (opcional) preserva as posições atuais das tarefas não
   // afetadas: empurrar um pão não re-embaralha o outro.
-  function calculaEncaixe(tarefas, pessoas, regrasRecursos, aPartirDe, agendaAnterior) {
+  // `idFoco` (opcional) = tarefa sendo mexida: ela é encaixada primeiro e
+  // vence as que estiverem na frente (regra 12/13 da ZenSpec).
+  function calculaEncaixe(tarefas, pessoas, regrasRecursos, aPartirDe, agendaAnterior, idFoco) {
     validaEntrada(tarefas, pessoas, regrasRecursos);
     if (tarefas.length === 0) return [];
 
     // Ordem de adição com dependências respeitadas (regra 10 + dependências).
     const ordenadas = ordenaPorDependencia(tarefas);
+
+    // Cadeia que acompanha o foco: dependentes transitivos (a receita anda
+    // como um bloco). O foco em si mantém o alvo (inicioMin/fimFixo).
+    let cadeia = null;
+    if (idFoco && ordenadas.some((t) => t.id === idFoco)) {
+      cadeia = dependentesDe(tarefas, idFoco);
+      // Reordena: o foco vai logo após os próprios predecessores, e antes de
+      // qualquer outra tarefa — assim ele encaixa no alvo e empurra quem
+      // estiver na frente, em vez de ser barrado por elas.
+      const foco = ordenadas.find((t) => t.id === idFoco);
+      const semFoco = ordenadas.filter((t) => t.id !== idFoco);
+      const preds = predecessoresDe(tarefas, idFoco);
+      let pos = 0;
+      for (let i = 0; i < semFoco.length; i++) {
+        if (preds.has(semFoco[i].id)) pos = i + 1;
+      }
+      semFoco.splice(pos, 0, foco);
+      ordenadas.length = 0;
+      ordenadas.push.apply(ordenadas, semFoco);
+    }
 
     const prevInicio = new Map();
     if (Array.isArray(agendaAnterior)) {
@@ -172,7 +239,8 @@
     const porId = new Map();
 
     for (const t of ordenadas) {
-      const inicio = primeiroInicioLivre(t, agenda, pessoas, regrasRecursos, aPartirDe, prevInicio);
+      const naCadeia = !!cadeia && cadeia.has(t.id);
+      const inicio = primeiroInicioLivre(t, agenda, pessoas, regrasRecursos, aPartirDe, prevInicio, naCadeia);
       const item = {
         id: t.id,
         nome: t.nome,

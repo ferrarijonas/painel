@@ -179,7 +179,8 @@
       tarefa.duracaoMin = Math.max(15, tarefa.duracaoMin + delta);
       try {
         const pessoas = global.personCounter.obter();
-        ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda);
+        ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda, configId);
+        limparAncorasDaCadeia(configId);
         global.dayStore.salvar(diaAtual);
         aplicar(ultimaAgenda);
         atualizarStatus(global.personCounter.obter(), ultimaAgenda);
@@ -263,7 +264,8 @@
     }
     try {
       const pessoas = global.personCounter.obter();
-      ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda);
+      ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda, tarefa.id);
+      limparAncorasDaCadeia(tarefa.id);
       global.dayStore.salvar(diaAtual);
       aplicar(ultimaAgenda);
       atualizarStatus(pessoas, ultimaAgenda);
@@ -274,6 +276,26 @@
       tarefa.duracaoMin = antes.duracaoMin;
       statusEl.textContent = "sem espaço no dia para essa movimentação";
       return false;
+    }
+  }
+
+  // limparAncorasDaCadeia — a receita anda como um bloco: ao mover uma etapa,
+  // os sucessores transitivos perdem o inicioMin fixado (passam a seguir a
+  // etapa movida sem folga). Predecessores e pães não relacionados preservam.
+  function limparAncorasDaCadeia(idFoco) {
+    const naCadeia = new Set();
+    const fila = [idFoco];
+    while (fila.length) {
+      const cur = fila.shift();
+      for (const t of diaAtual.tarefas) {
+        if ((t.dependeDe || []).indexOf(cur) !== -1 && !naCadeia.has(t.id)) {
+          naCadeia.add(t.id);
+          fila.push(t.id);
+        }
+      }
+    }
+    for (const t of diaAtual.tarefas) {
+      if (naCadeia.has(t.id)) delete t.inicioMin;
     }
   }
 

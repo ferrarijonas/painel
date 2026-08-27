@@ -89,7 +89,9 @@ com rede lenta/modo local).
 - Barra selecionada ganha **garras**: `corpo` (mover etapa), `fim` (estica/
   encurta duração, começo fixo), `começo` (mantém o fim = "Must Finish On").
   `↑`/`↓` alterna a garra; `←`/`→` aplica (passo 15min). Sucessores seguem
-  a etapa movida (sem folga); predecessores ficam.
+  a etapa movida (sem folga); predecessores ficam. **Quem você pega é quem
+  move**: se o alvo estiver ocupado, o ocupante da frente é empurrado para o
+  próximo horário válido (nunca fica como barreira imóvel).
 - **Navegação espacial** (padrão TV: W3C Spatial Navigation / Android TV): a
   seta move o foco para o elemento mais próximo na direção — `↓` = etapa de
   baixo (próximo processo), `→` = outro pão na mesma pista, `↑` = sobe.

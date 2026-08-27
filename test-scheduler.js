@@ -191,4 +191,82 @@ function assert(cond, msg) {
   assert(porId.mas.fim <= porId.fer.inicio, "mistura continua antes da fermenta");
 }
 
+// Cenário 12: quem você pega é quem move — mover Pão 2 (2º na ordem de
+// inserção) para um alvo ocupado pelo Pão 1 empurra o Pão 1; Pão 2 encaixa
+// no alvo em vez de ser barrado (regra 12 da ZenSpec).
+{
+  const tarefas = [
+    { id: "aquecer-forno", nome: "Aquecer forno", duracaoMin: 15, inicioMin: 120, recursos: ["forno"] },
+    { id: "p1-mas", nome: "Pão 1 mistura", duracaoMin: 60, inicioMin: 135, recursos: ["masseira"] },
+    { id: "p1-fer", nome: "Pão 1 fermenta", duracaoMin: 60, recursos: ["fermentacao"], dependeDe: ["p1-mas"] },
+    { id: "p1-mod", nome: "Pão 1 modela", duracaoMin: 15, recursos: ["modelagem"], dependeDe: ["p1-fer"] },
+    { id: "p1-for", nome: "Pão 1 forno", duracaoMin: 45, recursos: ["forno"], dependeDe: ["p1-mod", "aquecer-forno"] },
+    { id: "p2-mas", nome: "Pão 2 mistura", duracaoMin: 60, inicioMin: 75, recursos: ["masseira"] },
+    { id: "p2-fer", nome: "Pão 2 fermenta", duracaoMin: 60, inicioMin: 135, recursos: ["fermentacao"], dependeDe: ["p2-mas"] },
+    { id: "p2-mod", nome: "Pão 2 modela", duracaoMin: 15, recursos: ["modelagem"], dependeDe: ["p2-fer"] },
+    { id: "p2-for", nome: "Pão 2 forno", duracaoMin: 45, recursos: ["forno"], dependeDe: ["p2-mod", "aquecer-forno"] },
+  ];
+  const a0 = calculaEncaixe(tarefas, 1, recursos);
+  console.log("C12 base:", mostra(a0));
+  const antes = {}; a0.forEach((x) => (antes[x.id] = x.inicio));
+
+  // Pão 2 mistura arrastado para 11:00 (180) — ocupava o Pão 1 (10:15-11:15).
+  const emp = tarefas.map((t) => (t.id === "p2-mas" ? Object.assign({}, t, { inicioMin: 180 }) : t));
+  const a1 = calculaEncaixe(emp, 1, recursos, undefined, a0, "p2-mas");
+  console.log("C12 empurrado:", mostra(a1));
+  const porId = {}; a1.forEach((x) => (porId[x.id] = x));
+  assert(porId["p2-mas"].inicio === 180, "Pão 2 encaixa no alvo (11:00) — não é barrado");
+  assert(porId["p1-mas"].inicio > antes["p1-mas"], "Pão 1 (na frente) é empurrado para depois do Pão 2");
+  assert(porId["p1-mas"].inicio >= porId["p2-mas"].fim, "Pão 1 não sobrepõe o Pão 2 na masseira");
+}
+
+// Cenário 13: cadeia acompanha sem folga ao trazer para antes — mover a
+// mistura do Pão 1 para 08:30 puxa fermenta/modela/forno junto (sem folga),
+// e o Pão 2 (na frente) é empurrado (regra 13).
+{
+  const tarefas = [
+    { id: "aquecer-forno", nome: "Aquecer forno", duracaoMin: 15, inicioMin: 120, recursos: ["forno"] },
+    { id: "p1-mas", nome: "Pão 1 mistura", duracaoMin: 60, inicioMin: 135, recursos: ["masseira"] },
+    { id: "p1-fer", nome: "Pão 1 fermenta", duracaoMin: 60, recursos: ["fermentacao"], dependeDe: ["p1-mas"] },
+    { id: "p1-mod", nome: "Pão 1 modela", duracaoMin: 15, recursos: ["modelagem"], dependeDe: ["p1-fer"] },
+    { id: "p1-for", nome: "Pão 1 forno", duracaoMin: 45, recursos: ["forno"], dependeDe: ["p1-mod", "aquecer-forno"] },
+    { id: "p2-mas", nome: "Pão 2 mistura", duracaoMin: 60, inicioMin: 75, recursos: ["masseira"] },
+    { id: "p2-fer", nome: "Pão 2 fermenta", duracaoMin: 60, inicioMin: 135, recursos: ["fermentacao"], dependeDe: ["p2-mas"] },
+    { id: "p2-mod", nome: "Pão 2 modela", duracaoMin: 15, recursos: ["modelagem"], dependeDe: ["p2-fer"] },
+    { id: "p2-for", nome: "Pão 2 forno", duracaoMin: 45, recursos: ["forno"], dependeDe: ["p2-mod", "aquecer-forno"] },
+  ];
+  const a0 = calculaEncaixe(tarefas, 1, recursos);
+
+  const emp = tarefas.map((t) => (t.id === "p1-mas" ? Object.assign({}, t, { inicioMin: 30 }) : t));
+  const a1 = calculaEncaixe(emp, 1, recursos, undefined, a0, "p1-mas");
+  console.log("C13 trazido para 08:30:", mostra(a1));
+  const porId = {}; a1.forEach((x) => (porId[x.id] = x));
+  assert(porId["p1-mas"].inicio === 30, "mistura do Pão 1 encaixa em 08:30");
+  assert(porId["p1-fer"].inicio === porId["p1-mas"].fim, "fermenta segue a mistura sem folga");
+  assert(porId["p1-mod"].inicio === porId["p1-fer"].fim, "modela segue a fermenta sem folga");
+  assert(porId["p2-mas"].inicio > 75, "Pão 2 (na frente) é empurrado ao trazer o Pão 1 para antes");
+}
+
+// Cenário 14: dependente com âncora antiga (inicioMin) segue a cadeia quando
+// o foco é trazido para antes — sem folga, ignorando a âncora velha.
+{
+  const tarefas = [
+    { id: "aquecer-forno", nome: "Aquecer forno", duracaoMin: 15, inicioMin: 120, recursos: ["forno"] },
+    { id: "p1-mas", nome: "Pão 1 mistura", duracaoMin: 60, inicioMin: 135, recursos: ["masseira"] },
+    { id: "p1-fer", nome: "Pão 1 fermenta", duracaoMin: 60, recursos: ["fermentacao"], dependeDe: ["p1-mas"] },
+    { id: "p2-mas", nome: "Pão 2 mistura", duracaoMin: 60, inicioMin: 75, recursos: ["masseira"] },
+    { id: "p2-fer", nome: "Pão 2 fermenta", duracaoMin: 60, inicioMin: 135, recursos: ["fermentacao"], dependeDe: ["p2-mas"] },
+  ];
+  const a0 = calculaEncaixe(tarefas, 1, recursos);
+
+  // Pão 2 mistura para 08:30; a fermenta do Pão 2 tem inicioMin=135 (âncora
+  // antiga) — deve seguir a mistura em 09:30, sem a folga que a âncora criaria.
+  const emp = tarefas.map((t) => (t.id === "p2-mas" ? Object.assign({}, t, { inicioMin: 30 }) : t));
+  const a1 = calculaEncaixe(emp, 1, recursos, undefined, a0, "p2-mas");
+  console.log("C14:", mostra(a1));
+  const porId = {}; a1.forEach((x) => (porId[x.id] = x));
+  assert(porId["p2-mas"].inicio === 30, "mistura do Pão 2 encaixa em 08:30");
+  assert(porId["p2-fer"].inicio === porId["p2-mas"].fim, "fermenta do Pão 2 segue sem folga (ignora âncora antiga)");
+}
+
 console.log(process.exitCode ? "\nHOUVE FALHAS" : "\nTODOS OS TESTES PASSARAM");
