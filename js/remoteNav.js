@@ -153,6 +153,25 @@
     }
   }
 
+  // selecionarBarraPorId — foca e seleciona uma barra pelo id (arrastar no
+  // celular); se já selecionada, mantém. Não solta (usado durante o arrasto).
+  function selecionarBarraPorId(id) {
+    coletarNavegaveis();
+    const idx = itensFocados.findIndex((el) => el.classList.contains("barra") && el.dataset.id === id);
+    if (idx < 0) return false;
+    focoIndex = idx;
+    aplicarFoco();
+    const el = itensFocados[idx];
+    if (selecionadaEl && selecionadaEl !== el) selecionadaEl.classList.remove("selecionado");
+    if (selecionadaEl !== el) {
+      selecionadaEl = el;
+      selecionadaEl.classList.add("selecionado");
+      garraAtiva = "corpo";
+      document.dispatchEvent(new CustomEvent("painel:selecionarTarefa", { detail: { id, on: true } }));
+    }
+    return true;
+  }
+
   // focarBarra — devolve o foco à barra de um id (ex.: fechar config).
   function focarBarra(id) {
     coletarNavegaveis();
@@ -237,6 +256,12 @@
       }
 
       if (alvo.classList.contains("barra")) {
+        // Se acabou de arrastar essa barra no celular, ignora o clique
+        // fantasma que viria após o pointerup (senão soltaria a seleção).
+        if (global.__arrastouBarra === alvo.dataset.id) {
+          global.__arrastouBarra = null;
+          return;
+        }
         const agora = Date.now();
         if (alvo.dataset.id === ultimoClickId && agora - ultimoClickTempo < 400) {
           // Vem aí o dblclick → deixa o config abrir (main.js).
@@ -269,6 +294,7 @@
     aplicarFoco,
     deselecionar,
     reaplicarSelecao,
+    selecionarBarraPorId,
     focarPrimeiro,
     focarBarra,
     focarPrimeiraBarra,

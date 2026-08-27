@@ -578,3 +578,54 @@ body {
   .rotulo-barra { font-size: 0.76rem; }
   .rodape { font-size: 0.8rem; padding: 0.25rem 1rem; }
 }
+
+/* ---------- Celular / telas estreitas (retrato) ----------
+   O painel nasceu para TV 10-foot (paisagem, larga). No celular em retrato
+   a tela é estreita; reservar 118px para a coluna de postos esmaga as barras
+   do dia inteiro (10h) numa fatia inutilizável. Aqui compactamos a coluna
+   de postos e o topo para a timeline respirar e as barras ficarem largas. */
+@media (max-width: 600px) {
+  body { overflow: auto; }
+
+  /* O dia inteiro (10h) não cabe numa tela estreita sem esmagar as barras.
+     Em vez de comprimir, o timeline rola na horizontal: topo e miolo
+     compartilham a mesma largura mínima e rolam juntos como um bloco. */
+  .timeline { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .topo { min-width: 720px; }
+  .miolo { min-width: 720px; }
+
+  .topbar { flex-wrap: wrap; gap: 0.4rem; padding: 0.35rem 0.7rem; }
+  .marca img { height: 28px; }
+  .titulo { font-size: 1.05rem; }
+  .subtitulo { font-size: 0.62rem; }
+  .relogio-hora { font-size: 1.25rem; }
+  .relogio-data { font-size: 0.66rem; }
+  .clima-mini { padding: 0.15rem 0.5rem; gap: 0.25rem; }
+  .clima-mini-emoji { font-size: 0.85rem; }
+  .clima-mini-temp { font-size: 0.8rem; }
+  .pessoas { font-size: 0.8rem; padding: 0.18rem 0.6rem; }
+  .acao,
+  .botao-controles { font-size: 0.82rem; padding: 0.3rem 0.7rem; }
+  .controles { gap: 0.5rem; padding: 0.4rem 0.6rem; }
+
+  /* Coluna de postos mínima: rótulos em pé, largura enxuta. */
+  .canto,
+  .pistas { width: 46px; flex: 0 0 46px; padding: 0; }
+  .canto { justify-content: center; padding: 0; }
+  .rotulo-pista {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    justify-content: center;
+    padding: 0.2rem 0;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+  }
+  .topo { height: 3.2rem; }
+  .hora-nome { font-size: 0.66rem; }
+  .hora-temp { font-size: 0.5rem; }
+  .hora-temp.atual { font-size: 0.5rem; }
+  .marco-chip { font-size: 0.46rem; padding: 0.06rem 0.24rem; }
+  .rotulo-barra { font-size: 0.7rem; }
+  .rodape { font-size: 0.72rem; padding: 0.22rem 0.7rem; }
+  .garra-etiqueta { font-size: 0.7rem; padding: 0.1rem 0.45rem; }
+}

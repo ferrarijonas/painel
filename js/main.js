@@ -239,44 +239,109 @@
     global.timelineRenderer.marcarGarras(e.detail && e.detail.garra);
   });
 
-  // Empurrar tarefa — setas aplicam a garra ativa e o scheduler re-encaixa tudo.
-  document.addEventListener("painel:empurrar", (e) => {
-    const { id, dir, garra } = e.detail || {};
-    if (!diaAtual || !id || !dir) return;
-    const tarefa = diaAtual.tarefas.find((t) => t.id === id);
-    const item = ultimaAgenda.find((a) => a.id === id);
-    if (!tarefa || !item) return;
-    const passo = 15;
+  // aplicarMovimento — aplica um deslocamento (deltaMin) numa garra e, se
+  // couber, re-encaixa pelo scheduler e persiste. Retorna true se aplicou.
+  function aplicarMovimento(tarefa, g, deltaMin) {
+    const item = ultimaAgenda.find((a) => a.id === tarefa.id);
+    if (!item) return false;
     const antes = { inicioMin: tarefa.inicioMin, fimFixo: tarefa.fimFixo, duracaoMin: tarefa.duracaoMin };
-
-    const g = garra || "corpo";
+    g = g || "corpo";
     if (g === "fim") {
       // Borda direita: começo fixo, duração muda, fim e sucessores seguem.
       delete tarefa.fimFixo;
-      tarefa.duracaoMin = Math.max(15, tarefa.duracaoMin + dir * passo);
+      tarefa.duracaoMin = Math.max(15, tarefa.duracaoMin + deltaMin);
     } else if (g === "comeco") {
       // Borda esquerda: fim fixo (Must Finish On); sucessores não se movem.
-      const novoInicio = Math.max(0, item.inicio + dir * passo);
+      const novoInicio = Math.max(0, item.inicio + deltaMin);
       tarefa.fimFixo = item.fim;
       tarefa.duracaoMin = Math.max(15, item.fim - novoInicio);
       tarefa.inicioMin = novoInicio;
     } else {
       // Corpo: começo+fim juntos; duração preservada; sucessores seguem.
       delete tarefa.fimFixo;
-      tarefa.inicioMin = Math.max(0, (tarefa.inicioMin !== undefined ? tarefa.inicioMin : item.inicio) + dir * passo);
+      tarefa.inicioMin = Math.max(0, (tarefa.inicioMin !== undefined ? tarefa.inicioMin : item.inicio) + deltaMin);
     }
-
     try {
       const pessoas = global.personCounter.obter();
       ultimaAgenda = global.scheduler.calculaEncaixe(diaAtual.tarefas, pessoas, recursos, undefined, ultimaAgenda);
       global.dayStore.salvar(diaAtual);
       aplicar(ultimaAgenda);
       atualizarStatus(pessoas, ultimaAgenda);
+      return true;
     } catch (err) {
       tarefa.inicioMin = antes.inicioMin;
       tarefa.fimFixo = antes.fimFixo;
       tarefa.duracaoMin = antes.duracaoMin;
       statusEl.textContent = "sem espaço no dia para essa movimentação";
+      return false;
+    }
+  }
+
+  // Empurrar tarefa — setas aplicam a garra ativa e o scheduler re-encaixa tudo.
+  document.addEventListener("painel:empurrar", (e) => {
+    const { id, dir, garra } = e.detail || {};
+    if (!diaAtual || !id || !dir) return;
+    const tarefa = diaAtual.tarefas.find((t) => t.id === id);
+    if (!tarefa) return;
+    aplicarMovimento(tarefa, garra, dir * 15);
+  });
+
+  // Arrastar no celular/mouse — segura numa barra e move/esticarr por toque.
+  // A barra selecionada vira manipulável: arrastar no corpo move, nas bordas
+  // estica (fim) ou mantém o fim (começo). Grava a cada passo via dayStore.
+  let arrastando = null;
+  function minutosPorPixel() {
+    const cenario = timelineEl.querySelector(".cenario");
+    if (!cenario) return 1;
+    const W = (cenario.clientWidth || 800) - 24; // mesmo R_PAD do renderer
+    return W > 0 ? 600 / W : 1;
+  }
+  timelineEl.addEventListener("pointerdown", (e) => {
+    const barra = e.target.closest ? e.target.closest(".barra") : null;
+    if (!barra || !diaAtual) return;
+    const id = barra.dataset.id;
+    const tarefa = diaAtual.tarefas.find((t) => t.id === id);
+    if (!tarefa) return;
+    // Seleciona a barra (como um toque simples) para mostrar as garras.
+    global.remoteNav.selecionarBarraPorId(id);
+    const rect = barra.getBoundingClientRect();
+    const cenarioRect = (timelineEl.querySelector(".cenario") || timelineEl).getBoundingClientRect();
+    // Garra pela posição do toque dentro da barra (10% das pontas).
+    let g = "corpo";
+    const frac = (e.clientX - rect.left) / Math.max(rect.width, 1);
+    if (frac < 0.12) g = "comeco";
+    else if (frac > 0.88) g = "fim";
+    arrastando = {
+      id,
+      g,
+      tarefa,
+      ultimoX: e.clientX,
+      minPorPx: minutosPorPixel(),
+      ultimoDelta: 0,
+      moveu: false,
+    };
+    e.preventDefault();
+  });
+  window.addEventListener("pointermove", (e) => {
+    if (!arrastando) return;
+    const dx = e.clientX - arrastando.ultimoX;
+    if (Math.abs(dx) < 4) return;
+    arrastando.ultimoX = e.clientX;
+    const deltaMin = Math.round(dx * arrastando.minPorPx);
+    arrastando.ultimoDelta += deltaMin;
+    arrastando.moveu = true;
+    aplicarMovimento(arrastando.tarefa, arrastando.g, deltaMin);
+    e.preventDefault();
+  });
+  window.addEventListener("pointerup", () => {
+    if (!arrastando) return;
+    const moveu = arrastando.moveu;
+    const id = arrastando.id;
+    arrastando = null;
+    if (moveu) {
+      global.__arrastouBarra = id;
+      global.remoteNav.coletarNavegaveis();
+      setTimeout(() => { if (global.__arrastouBarra === id) global.__arrastouBarra = null; }, 500);
     }
   });
 

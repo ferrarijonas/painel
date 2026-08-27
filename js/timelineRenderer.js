@@ -37,6 +37,7 @@
   const R_PAD = 24;
 
   let ultimo = null;
+  let ultimoW = 800;
   let agoraEl = null;
   let timerResize = null;
 
@@ -113,7 +114,7 @@
       agoraEl.style.display = "none";
     } else {
       agoraEl.style.display = "";
-      agoraEl.style.left = percentual(min) + "%";
+      agoraEl.style.left = (percentual(min) / 100) * ultimoW + "px";
     }
   }
 
@@ -136,7 +137,7 @@
     for (let m = T0; m <= T1; m += 60) {
       const tick = document.createElement("div");
       tick.className = "hora";
-      tick.style.left = percentual(m) + "%";
+      tick.dataset.min = String(m);
       const horaNome = document.createElement("span");
       horaNome.className = "hora-nome";
       horaNome.textContent = horaCurta(m);
@@ -153,7 +154,7 @@
       if (m % 60 === 0) continue;
       const tick = document.createElement("div");
       tick.className = "tick-menor";
-      tick.style.left = percentual(m) + "%";
+      tick.dataset.min = String(m);
       eixo.appendChild(tick);
     }
     // Chips de marco na faixa de horas (não colidem com as barras):
@@ -170,7 +171,7 @@
       const m = marcos[k];
       const chip = document.createElement("span");
       chip.className = "marco-chip " + m.classe + (k % 2 ? " marco-chip-baixo" : "");
-      chip.style.left = percentual(m.min) + "%";
+      chip.dataset.min = String(m.min);
       chip.textContent = m.rotulo;
       eixo.appendChild(chip);
     }
@@ -194,6 +195,17 @@
     // W = largura útil (conteúdo): descontamos o respiro da direita (R_PAD),
     // igual ao padding-right do .cenario, para o fim do dia não encostar na borda.
     const W = (cenario.clientWidth || 800) - R_PAD;
+    ultimoW = W;
+
+    // posicionarPorMin — posiciona qualquer elemento com [data-min] nas mesmas
+    // coordenadas das barras (largura de conteúdo, sem o respiro da direita),
+    // pra hora "18h" e as linhas de grade não encostarem na borda da tela.
+    const posicao = (m) => (percentual(m) / 100) * W + "px";
+    document.querySelectorAll("[data-min]").forEach((el2) => {
+      const m = parseInt(el2.dataset.min, 10);
+      if (Number.isFinite(m)) el2.style.left = posicao(m);
+    });
+
     const laneH = H / Math.max(pistas.length, 1);
     const barH = Math.max(
       22,
@@ -222,7 +234,7 @@
     for (let m = T0; m <= T1; m += 60) {
       const linha = document.createElement("div");
       linha.className = "gridlinha";
-      linha.style.left = percentual(m) + "%";
+      linha.dataset.min = String(m);
       cenario.appendChild(linha);
     }
     // Quebras de 15min (linhas menores).
@@ -230,7 +242,7 @@
       if (m % 60 === 0) continue;
       const linha = document.createElement("div");
       linha.className = "gridlinha-menor";
-      linha.style.left = percentual(m) + "%";
+      linha.dataset.min = String(m);
       cenario.appendChild(linha);
     }
 
@@ -299,7 +311,7 @@
     for (const m of marcos) {
       const linha = document.createElement("div");
       linha.className = "marco " + m.classe.replace("marco-chip-", "marco-");
-      linha.style.left = percentual(m.min) + "%";
+      linha.dataset.min = String(m.min);
       cenario.appendChild(linha);
     }
 

@@ -116,6 +116,8 @@ node diag-config.js <url>                  # modal de config da tarefa (não-des
 node diag-grips.js <url>                   # garras da barra selecionada (não-destrutivo)
 node diag-spatial.js <url>                 # navegação espacial (↓ etapa de baixo, → pista)
 node diag-persist.js <url>                 # persistência após reload (não-destrutivo)
+node diag-local.js <url>                   # backup localStorage (salva → reload → espelho)
+node diag-mobile.js <url> [largura]        # layout em viewport de celular (retrato)
 node diag-shot.js <url> [png]              # screenshot para inspeção
 ```
 

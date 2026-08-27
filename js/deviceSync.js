@@ -12,8 +12,30 @@
   let callbacksProntos = [];
   let modoLocal = false;
 
+  // Espelho local (localStorage) — backup offline. O dia nunca se perde ao
+  // desligar a máquina: sem rede, o painel volta do último estado conhecido
+  // em vez de zerar. O snapshot real do Firebase SEMPRE vence o espelho.
+  const CHAVE_LOCAL = "painel.dias.v1";
+  function lerEspelho() {
+    try {
+      const raw = global.localStorage && global.localStorage.getItem(CHAVE_LOCAL);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function gravarEspelho() {
+    try {
+      if (global.localStorage) global.localStorage.setItem(CHAVE_LOCAL, JSON.stringify(diasLocais));
+    } catch (e) { /* quota/privado — sem backup, segue só em memória */ }
+  }
+
   // inicializar — configura o Firebase se houver credenciais reais.
   function inicializar() {
+    // Hidrata do espelho local ANTES de qualquer rede: se o boot ficar no
+    // modo local (8s), o dia da última sessão já está em mãos.
+    diasLocais = lerEspelho();
+
     const cfg = typeof global.FIREBASE_CONFIG !== "undefined" ? global.FIREBASE_CONFIG : null;
     if (cfg && cfg.databaseURL && cfg.databaseURL.indexOf("SUA") === -1) {
       if (typeof global.firebase !== "undefined" && global.firebase.database) {
@@ -22,7 +44,9 @@
         firebaseRef.on("value", (snap) => {
           const val = snap.val();
           if (val) {
+            // Snapshot real é a fonte da verdade: vence o espelho local.
             diasLocais = val;
+            gravarEspelho();
             emitir(diasLocais);
           }
           modoLocal = false;
@@ -61,6 +85,7 @@
   // salvarDia — grava um dia (por data) no estado compartilhado e notifica.
   function salvarDia(dia) {
     diasLocais[dia.data] = dia;
+    gravarEspelho(); // backup offline: sobrevive a desligar a máquina sem rede
     if (firebaseRef) {
       firebaseRef.child(dia.data).set(dia).catch((err) => {
         console.error("painel: falha ao gravar dia", dia.data, err && err.message);

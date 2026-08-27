@@ -65,6 +65,8 @@ build.js              # validação de integridade
 test-scheduler.js     # testes do agendador
 test-render.js        # teste de boot (Chrome headless)
 diag-edge.js          # diagnóstico no Edge real
+diag-mobile.js        # layout em viewport de celular (retrato)
+diag-local.js         # backup localStorage (salva → reload → espelho)
 ```
 
 ## Specs
