@@ -20,7 +20,7 @@
     { id: "fermentacao", rotulo: "Caixa de fermentação" },
     { id: "modelagem", rotulo: "Modelagem" },
     { id: "ambiente", rotulo: "Temp. ambiente" },
-    { id: "forno", rotulo: "Forno" },
+    { id: "forno", rotulo: "Geladeira" },
   ];
 
   const ROTULO_EXTRA = { livre: "Livre" };

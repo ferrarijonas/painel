@@ -9,7 +9,7 @@ sequência ou paralelo e re-encaixam dependentes quando algo muda.
 ## O que ele faz
 
 - Mostra o dia inteiro numa flowline: tempo na horizontal, postos em pistas
-  (masseira → fermentação → modelagem → temperatura ambiente → forno).
+  (masseira → fermentação → modelagem → temperatura ambiente → geladeira).
 - Cada receita/fornada cruza os postos como uma linha diagonal.
 - O `scheduler` resolve sozinho choques de equipamento (masseira exclusiva,
   forno com capacidade) e de gente (1 a 4 pessoas presentes).
