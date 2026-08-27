@@ -19,7 +19,7 @@
     { id: "masseira", rotulo: "Masseira" },
     { id: "fermentacao", rotulo: "Caixa de fermentação" },
     { id: "modelagem", rotulo: "Modelagem" },
-    { id: "ambiente", rotulo: "Temp. ambiente" },
+    { id: "ambiente", rotulo: "Temperatura ambiente" },
     { id: "forno", rotulo: "Geladeira" },
   ];
 
@@ -63,16 +63,15 @@
     return p || { id: rid, rotulo: ROTULO_EXTRA[rid] || rid };
   }
 
-  // pistasUsadas — pistas presentes na agenda, na ordem de fluxo.
+  // pistasUsadas — postos do dia, na ordem de fluxo. As 5 pistas configuradas
+  // (masseira → fermentação → modelagem → temperatura ambiente → geladeira)
+  // sempre aparecem, mesmo vazias (o dono vê a linha do balanço completa).
+  // Tarefas com recurso fora da lista (ex.: livre) ganham uma pista extra no fim.
   function pistasUsadas(agenda) {
-    const ids = [];
+    const pistas = PISTAS.slice();
     for (const item of agenda) {
       const rid = item.recursos && item.recursos.length ? item.recursos[0] : "livre";
-      if (ids.indexOf(rid) === -1) ids.push(rid);
-    }
-    const pistas = PISTAS.filter((p) => ids.indexOf(p.id) !== -1);
-    for (const rid of ids) {
-      if (!PISTAS.some((p) => p.id === rid)) {
+      if (!PISTAS.some((p) => p.id === rid) && !pistas.some((p) => p.id === rid)) {
         pistas.push({ id: rid, rotulo: ROTULO_EXTRA[rid] || rid });
       }
     }
